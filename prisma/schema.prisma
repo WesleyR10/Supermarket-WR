@@ -1,0 +1,647 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// =============================================
+// SUPERMERCADO - STORES
+// =============================================
+
+enum StoresStatus {
+  PENDING_ACTIVATION
+  ACTIVE
+  SUSPENDED
+  CANCELLED
+}
+
+model Stores {
+  store_id     String       @id @default(uuid())
+  name         String
+  cnpj         String       @unique
+  status       StoresStatus
+  settings     Json // Configurações específicas da empresa
+  subscription Json // Dados da assinatura
+  created_at   DateTime     @default(now())
+  updated_at   DateTime     @updatedAt
+
+  // Relacionamentos
+  users          User[]
+  Address        Address[]
+  categories     Category[]
+  inventoryItems InventoryItem[]
+  sales          Sale[]
+  clients        Client[]
+  employees      Employee[]
+
+  @@map("stores")
+}
+
+// =============================================
+// ENDEREÇOS - ENTIDADE COMPARTILHADA
+// =============================================
+
+enum AddressType {
+  HOME // Casa
+  WORK // Trabalho
+  HEADQUARTERS // Matriz
+  BRANCH // Filial
+  WAREHOUSE // Depósito
+  DELIVERY // Entrega
+  BILLING // Cobrança
+}
+
+enum AddressStatus {
+  ACTIVE
+  INACTIVE
+  DELETED
+}
+
+model Address {
+  address_id  String  @id @default(uuid())
+  client_id   String?
+  store_id    String?
+  supplier_id String?
+
+  // Dados do endereço
+  street       String // Rua
+  number       String // Número
+  complement   String? // Complemento
+  neighborhood String // Bairro
+  city         String // Cidade
+  state        String // Estado
+  zipcode      String // CEP
+
+  // Metadados
+  address_type AddressType? // Tipo de endereço
+  is_primary   Boolean       @default(false) // Se é o endereço principal
+  status       AddressStatus @default(ACTIVE) // Status do endereço
+
+  // Timestamps
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime? // Soft delete
+
+  // Relacionamentos
+  client   Client?   @relation("ClientAddresses", fields: [client_id], references: [client_id])
+  stores   Stores?   @relation(fields: [store_id], references: [store_id])
+  supplier Supplier? @relation(fields: [supplier_id], references: [supplier_id])
+
+  // Endereços de entrega (Order)
+  delivery_orders Order[] @relation("DeliveryAddress")
+
+  // Índices para performance
+  @@index([client_id, is_primary, status]) // Busca endereço principal ativo
+  @@index([store_id, address_type, status]) // Busca por tipo e status
+  @@index([city, state, status]) // Relatórios geográficos
+  @@index([zipcode]) // Cálculo de frete
+  @@map("addresses")
+}
+
+// =============================================
+// SUPERMERCADO - CORE ENTITIES
+// =============================================
+
+model Category {
+  category_id String  @id @default(uuid())
+  store_id    String
+  name        String  @unique
+  description String?
+  is_active   Boolean @default(true)
+
+  // Campos específicos do supermercado
+  parent_category_id        String? // Hierarquia de categorias
+  tax_rate                  Float? // Taxa de imposto específica (ICMS)
+  default_margin_percentage Float? // Margem padrão para a categoria
+  requires_expiry_date      Boolean @default(false) // Produtos perecíveis
+  display_order             Int     @default(0) // Ordem de exibição no PDV/e-commerce
+  icon_name                 String? // Nome do ícone para interface
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  stores           Stores     @relation(fields: [store_id], references: [store_id])
+  parent_category  Category?  @relation("CategoryHierarchy", fields: [parent_category_id], references: [category_id])
+  child_categories Category[] @relation("CategoryHierarchy")
+  products         Product[]
+
+  // Índices para performance
+  @@index([store_id, is_active]) // Categorias ativas por empresa
+  @@index([parent_category_id, display_order]) // Hierarquia ordenada
+  @@index([name]) // Busca por nome
+  @@map("categories")
+}
+
+model Product {
+  product_id  String  @id @default(uuid())
+  category_id String
+  name        String
+  description String?
+  barcode     String  @unique
+  price       Float
+  cost_price  Float? // Preço de custo
+  is_active   Boolean @default(true)
+
+  // Campos específicos do supermercado
+  brand             String? // Marca do produto
+  unit_type         String  @default("unit") // unit, kg, liter, etc.
+  weight            Float? // Peso em gramas
+  volume            Float? // Volume em ml
+  dimensions        String? // Dimensões (LxAxP)
+  supplier_code     String? // Código do fornecedor
+  ncm_code          String? // Código NCM para fiscal
+  requires_weighing Boolean @default(false) // Produtos pesáveis (açougue)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  category        Category        @relation(fields: [category_id], references: [category_id])
+  inventory_items InventoryItem[]
+  sale_items      SaleItem[]
+  OrderItem       OrderItem[]
+
+  // Índices para performance
+  @@index([category_id, is_active]) // Produtos por categoria
+  @@index([barcode]) // Busca por código de barras
+  @@index([brand, is_active]) // Produtos por marca
+  @@map("products")
+}
+
+model InventoryItem {
+  inventory_item_id String @id @default(uuid())
+  store_id          String
+  product_id        String @unique // Um produto tem um registro de estoque
+  quantity          Int    @default(0)
+  min_stock         Int    @default(5)
+  max_stock         Int    @default(100)
+
+  // Campos específicos do supermercado
+  location           String? // Localização no estoque (corredor/prateleira)
+  expiry_date        DateTime? // Data de validade para produtos perecíveis
+  batch_number       String? // Número do lote para rastreabilidade
+  supplier_id        String? // Referência para fornecedor
+  cost_price         Float? // Preço de custo atual
+  last_movement_date DateTime  @default(now()) // Data da última movimentação
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  stores          Stores          @relation(fields: [store_id], references: [store_id])
+  product         Product         @relation(fields: [product_id], references: [product_id])
+  stock_movements StockMovement[]
+
+  // Índices para performance
+  @@index([store_id, quantity]) // Produtos com estoque baixo
+  @@index([expiry_date, store_id]) // Produtos próximos ao vencimento
+  @@index([last_movement_date]) // Movimentações recentes
+  @@map("inventory_items")
+}
+
+// =============================================
+// MOVIMENTAÇÃO DE ESTOQUE
+// =============================================
+
+enum StockMovementType {
+  IN // Entrada
+  OUT // Saída
+  ADJUSTMENT // Ajuste
+  LOSS // Perda
+  TRANSFER // Transferência
+}
+
+model StockMovement {
+  stock_movement_id String            @id @default(uuid())
+  inventory_item_id String
+  type              StockMovementType
+  quantity          Int // Quantidade (positiva para entrada, negativa para saída)
+  reason            String // Motivo da movimentação
+  reference_id      String? // ID da venda, compra, etc.
+  operator_id       String? // Operador responsável
+
+  created_at DateTime @default(now())
+
+  // Relacionamentos
+  inventory_item InventoryItem @relation(fields: [inventory_item_id], references: [inventory_item_id])
+
+  @@map("stock_movements")
+}
+
+// =============================================
+// VENDAS (PDV)
+// =============================================
+
+enum SaleStatus {
+  IN_PROGRESS // Em andamento
+  COMPLETED // Finalizada
+  CANCELLED // Cancelada
+}
+
+enum SalePaymentMethod {
+  CASH // Dinheiro
+  DEBIT_CARD // Cartão de débito
+  CREDIT_CARD // Cartão de crédito
+  PIX // PIX
+  STORE_CREDIT // Fiado
+  MIXED // Misto
+}
+
+model Sale {
+  sale_id     String     @id @default(uuid())
+  store_id    String // ID da empresa
+  operator_id String // ID do operador de caixa
+  client_id   String? // ID do cliente (opcional)
+  status      SaleStatus @default(IN_PROGRESS)
+
+  // Valores
+  subtotal        Float @default(0)
+  discount_amount Float @default(0)
+  total_amount    Float @default(0)
+
+  // Pagamento
+  payment_method  SalePaymentMethod?
+  payment_details Json? // JSON com detalhes do pagamento
+  cash_received   Float? // Valor recebido em dinheiro
+  change_amount   Float? // Troco
+
+  // Observações e timestamps
+  notes        String?
+  created_at   DateTime  @default(now())
+  completed_at DateTime?
+
+  // Relacionamentos
+  stores Stores     @relation(fields: [store_id], references: [store_id])
+  client Client?    @relation("ClientSales", fields: [client_id], references: [client_id])
+  items  SaleItem[]
+
+  // Índices para performance
+  @@index([store_id, status]) // Busca por empresa e status
+  @@index([operator_id, created_at]) // Busca por operador e data de criação
+  @@index([client_id, status]) // Busca por cliente e status
+  @@map("sales")
+}
+
+model SaleItem {
+  id              String @id @default(uuid())
+  sale_id         String
+  product_id      String
+  product_name    String // Nome do produto no momento da venda
+  quantity        Int
+  unit_price      Float // Preço unitário no momento da venda
+  discount_amount Float  @default(0)
+  subtotal        Float // Subtotal do item (quantity * unit_price - discount)
+
+  created_at DateTime @default(now())
+
+  // Relacionamentos
+  sale    Sale    @relation(fields: [sale_id], references: [sale_id], onDelete: Cascade)
+  product Product @relation(fields: [product_id], references: [product_id])
+
+  @@map("sale_items")
+}
+
+// =============================================
+// E-COMMERCE
+// =============================================
+
+enum LoyaltyLevel {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+}
+
+enum ContactMethod {
+  EMAIL
+  SMS
+  WHATSAPP
+  PHONE
+  NONE
+}
+
+enum CustomerType {
+  INDIVIDUAL
+  BUSINESS
+  EMPLOYEE
+  VIP
+  WHOLESALE
+}
+
+enum PaymentPreference {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+  PIX
+  BANK_TRANSFER
+  FOOD_VOUCHER
+  MEAL_VOUCHER
+  INSTALLMENTS
+}
+
+enum DeliveryPreference {
+  PICKUP
+  HOME_DELIVERY
+  WORK_DELIVERY
+}
+
+// =============================================
+// IDENTITY SYSTEM - GLOBAL + STORE ISOLATION
+// =============================================
+
+// 🌐 GLOBAL IDENTITY: Dados compartilhados
+model User {
+  user_id       String    @id @default(uuid())
+  email         String    @unique // Email único global
+  password_hash String
+  cpf           String?   @unique // CPF único global
+  full_name     String
+  birth_date    DateTime?
+  phone         String?
+
+  // Timestamps
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  deleted_at DateTime? // Soft delete
+
+  // LGPD
+  gdpr_consent      Boolean @default(false) // Consentimento para uso de dados
+  marketing_consent Boolean @default(false) // Consentimento para marketing
+
+  // Relacionamentos
+  clients        Client[] // Um User pode ter múltiplos Clients (um por loja)
+  Stores         Stores?  @relation(fields: [storesStore_id], references: [store_id])
+  storesStore_id String?
+
+  @@index([email])
+  @@index([cpf])
+  @@map("users")
+}
+
+// 🏪 STORE-SPECIFIC CLIENT: Dados isolados por loja
+model Client {
+  client_id String @id @default(uuid())
+  user_id   String // FK → User (dados globais)
+  stores_id String // FK → Stores (isolamento por loja)
+
+  // Programa de fidelidade (específico por loja)
+  loyalty_points      Int          @default(0)
+  loyalty_level       LoyaltyLevel @default(BRONZE)
+  loyalty_card_number String?      @unique
+
+  // Preferências (específicas por loja)
+  preferred_contact_method ContactMethod @default(NONE)
+  allows_promotions        Boolean       @default(true)
+  allows_sms               Boolean       @default(false)
+  allows_email             Boolean       @default(false)
+
+  // Campos específicos do supermercado (por loja)
+  customer_type       CustomerType        @default(INDIVIDUAL)
+  credit_limit        Float? // Limite de crédito para fiado
+  payment_preference  PaymentPreference?
+  delivery_preference DeliveryPreference?
+
+  // Analytics (específicos por loja)
+  avg_monthly_spending Float? // Média mensal de gastos NESTA loja
+  last_purchase_date   DateTime? // Data da última compra NESTA loja
+  total_purchases      Int       @default(0) // Total de compras NESTA loja
+  lifetime_value       Float     @default(0) // Valor total gasto NESTA loja
+
+  // Metadados por loja
+  is_active         Boolean   @default(true)
+  created_at        DateTime  @default(now()) // Quando se cadastrou NESTA loja
+  updated_at        DateTime  @updatedAt
+  first_purchase_at DateTime? // Primeira compra NESTA loja
+  last_activity_at  DateTime  @default(now()) // Última atividade NESTA loja
+
+  // Relacionamentos
+  user      User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+  stores    Stores    @relation(fields: [stores_id], references: [store_id], onDelete: Cascade)
+  addresses Address[] @relation("ClientAddresses")
+  orders    Order[]
+  sales     Sale[]    @relation("ClientSales")
+
+  // Unique constraint: Um User só pode ter um Client por loja
+  @@unique([user_id, stores_id])
+  // Índices para performance
+  @@index([stores_id, is_active]) // Clientes ativos por loja
+  @@index([loyalty_level, stores_id]) // Níveis de fidelidade por loja
+  @@index([customer_type, stores_id]) // Tipos de cliente por loja
+  @@index([user_id]) // Busca rápida por usuário global
+  @@index([loyalty_card_number]) // Busca por cartão fidelidade
+  @@map("clients")
+}
+
+// 👨‍💼 STORE EMPLOYEES: Funcionários por loja (separado de Users)
+
+enum EmployeeRole {
+  ADMIN // ADMIN GLOBAL
+  MANAGER // GERENTE
+  CASHIER // CAIXA
+  OPERATOR // OPERADOR
+  STORE_MANAGER // GERENTE DA LOJA
+  STORE_CASHIER // CAIXA DA LOJA
+  STORE_OPERATOR // OPERADOR DA LOJA
+}
+
+enum EmployeeDepartment {
+  MARKETING // MARKETING
+  SALES // VENDAS
+  IT // TECNOLOGIA DA INFORMAÇÃO
+  HR // RECURSOS HUMANOS
+  FINANCE // FINANCEIRO
+  CUSTOMER_SERVICE // ATENDIMENTO AO CLIENTE
+  SUPPORT // SUPORTE
+  LOGISTICS // LOGÍSTICA
+  PRODUCTION // PRODUÇÃO
+  QUALITY_CONTROL // CONTROLE DE QUALIDADE
+  PURCHASING // COMPRAS
+  ACCOUNTING // CONTABILIDADE
+  ADMINISTRATION // ADMINISTRAÇÃO
+  INVENTORY // ESTOQUE
+  SECURITY // SEGURANÇA
+  CLEANING // LIMPEZA
+  MAINTENANCE // MANUTENÇÃO
+  RECEPTION // RECEPÇÃO
+  OTHER // OUTROS
+}
+
+model Employee {
+  employee_id String @id @default(uuid())
+  stores_id   String // FK → Stores
+
+  // Dados profissionais
+  name          String
+  email         String             @unique // Email corporativo
+  password_hash String
+  employee_code EmployeeDepartment @unique // Código do funcionário
+  role          EmployeeRole       @default(CASHIER) // ADMIN, MANAGER, OPERATOR, CASHIER
+  department    String? // Setor (CAIXA, AÇOUGUE, PADARIA, GERENCIA)
+
+  // Permissões e configurações
+  permissions Json? // Permissões específicas JSON
+  schedule    Json? // Horários de trabalho JSON
+  salary      Float? // Salário (opcional, confidencial)
+
+  // Status e controle
+  is_active  Boolean   @default(true)
+  last_login DateTime?
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  hired_at   DateTime  @default(now())
+  fired_at   DateTime?
+
+  // Relacionamentos
+  stores Stores @relation(fields: [stores_id], references: [store_id], onDelete: Cascade)
+
+  // Índices
+  @@index([stores_id, is_active]) // Funcionários ativos por loja
+  @@index([email]) // Login
+  @@index([employee_code]) // Busca por código
+  @@index([role, stores_id]) // Funcionários por cargo
+  @@map("employees")
+}
+
+// =============================================
+// PEDIDOS 
+// =============================================
+
+enum OrderStatus {
+  PENDING // Pendente
+  CONFIRMED // Confirmado
+  PREPARING // Preparando
+  OUT_FOR_DELIVERY // Saiu para entrega
+  DELIVERED // Entregue
+  CANCELLED // Cancelado
+}
+
+enum PaymentStatus {
+  PENDING // Pendente
+  PAID // Pago
+  FAILED // Falhou
+  REFUNDED // Reembolsado
+}
+
+enum PaymentMethod {
+  CASH
+  DEBIT_CARD
+  CREDIT_CARD
+  PIX
+  STORE_CREDIT
+  MIXED
+}
+
+model Order {
+  order_id            String  @id @default(uuid())
+  client_id           String
+  delivery_address_id String? // ID do endereço de entrega
+
+  status OrderStatus @default(PENDING)
+
+  // Valores
+  subtotal        Float @default(0)
+  discount_amount Float @default(0)
+  delivery_fee    Float @default(0)
+  total_amount    Float @default(0)
+
+  // Outros campos de entrega
+  delivery_date  DateTime?
+  delivery_notes String?
+
+  // Pagamento
+  payment_method  PaymentMethod?
+  payment_status  PaymentStatus  @default(PENDING)
+  payment_details Json? // JSON com detalhes do pagamento
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  client           Client      @relation(fields: [client_id], references: [client_id])
+  items            OrderItem[]
+  delivery_address Address?    @relation("DeliveryAddress", fields: [delivery_address_id], references: [address_id])
+
+  // ÍNDICES OTIMIZADOS
+  @@index([client_id, status]) // Busca por cliente e status
+  @@index([payment_status, status]) // Busca por status de pagamento e entrega
+  @@index([delivery_date, status]) // Busca por data de entrega e status
+  @@index([total_amount]) // Relatórios de valor de pedidos
+  @@index([created_at]) // Busca por data de criação
+  @@map("orders")
+}
+
+model OrderItem {
+  order_item_id String @id @default(uuid())
+  order_id      String
+  product_id    String
+  product_name  String // Nome do produto no momento do pedido
+  quantity      Int
+  unit_price    Float // Preço unitário no momento do pedido
+  subtotal      Float // Subtotal do item
+
+  created_at DateTime @default(now())
+
+  // Relacionamentos
+  order   Order   @relation(fields: [order_id], references: [order_id], onDelete: Cascade)
+  product Product @relation(fields: [product_id], references: [product_id])
+
+  @@map("order_items")
+}
+
+// =============================================
+// SISTEMA DE USUÁRIOS E OPERADORES
+// =============================================
+
+// =============================================
+// FORNECEDORES
+// =============================================
+
+model Supplier {
+  supplier_id    String  @id @default(uuid())
+  name           String
+  stores_name    String?
+  cnpj           String? @unique // CNPJ do fornecedor
+  contact_person String? // Pessoa de contato
+  email          String? // Email do fornecedor
+  phone          String? // Telefone do fornecedor
+
+  // Dados comerciais
+  payment_terms String? // Condições de pagamento
+  delivery_days Int? // Dias para entrega
+  minimum_order Float? // Pedido mínimo
+
+  is_active  Boolean  @default(true)
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // Relacionamentos
+  Address Address[]
+
+  @@map("suppliers")
+}
+
+// =============================================
+// CONFIGURAÇÕES DO SISTEMA
+// =============================================
+
+model SystemConfig {
+  system_config_id String  @id @default(uuid())
+  key              String  @unique // Chave da configuração
+  value            String // Valor da configuração
+  description      String? // Descrição da configuração
+  category         String  @default("general") // general, fiscal, pdv, ecommerce, etc.
+  is_active        Boolean @default(true) // Se a configuração está ativa
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  @@map("system_configs")
+}
