@@ -1,6 +1,6 @@
 # Git Workflow - Supermarket WR
 
-Este documento descreve o workflow Git utilizado no projeto, seguindo as melhores práticas do **Git Flow** e **Git Lintzen**.
+Este documento descreve o workflow Git utilizado no projeto, seguindo as melhores práticas do **Git Flow** e **CommintLint**.
 
 ## 🏗️ Estrutura de Branches
 
@@ -17,7 +17,7 @@ Este documento descreve o workflow Git utilizado no projeto, seguindo as melhore
 - **`release/`**: Preparação de releases
 - **`support/`**: Suporte a versões antigas
 
-## 📝 Padrão de Commits (Git Lintzen)
+## 📝 Padrão de Commits (CommitLint)
 
 ### Formato
 
@@ -170,7 +170,7 @@ Antes de fazer um commit, verifique:
 
 - [ ] Código segue os padrões do projeto
 - [ ] Testes passam
-- [ ] Mensagem segue o padrão Git Lintzen
+- [ ] Mensagem segue o padrão CommitLint
 - [ ] Escopo está correto
 - [ ] Descrição é clara e concisa
 - [ ] Não há dados sensíveis no commit
@@ -194,4 +194,5 @@ Recomenda-se configurar hooks para:
 
 - [Conventional Commits](https://www.conventionalcommits.org/)
 - [Git Flow](https://nvie.com/posts/a-successful-git-branching-model/)
-- [Git Lintzen](https://github.com/commitizen/cz-cli)
+- [CommitLint](https://github.com/conventional-changelog/commitlint)
+
