@@ -61,7 +61,7 @@ export class OnlineOrderOutputMapper {
       delivery_fee: entity.delivery_fee.value,
       total: entity.total.value,
       payment_method: entity.payment_method?.toString(),
-      notes: entity.notes,
+      notes: entity.notes ,
       estimated_delivery: entity.estimated_delivery?.toISOString(),
       actual_delivery: entity.actual_delivery?.toISOString(),
       created_at: entity.created_at.toISOString(),

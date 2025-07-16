@@ -4,19 +4,21 @@ import { Uuid } from '../../shared/domain/value-objects/uuid.vo';
 import { Money } from '../../shared/domain/value-objects/money.vo';
 import { Quantity } from '../../shared/domain/value-objects/quantity.vo';
 import { Price } from '../../shared/domain/value-objects/price.vo';
-import { PaymentMethod, PaymentMethodType } from '../../shared/domain/value-objects/payment-method.vo';
-// import { OnlineOrderFakeBuilder } from './online-order-fake.builder';
-// import { OnlineOrderValidatorFactory } from './online-order.validator';
+import { PaymentMethod } from '../../shared/domain/value-objects/payment-method.vo';
+import { OnlineOrderValidatorFactory } from './online-order.validator';
+import { OrderItemFakeBuilder } from './fake-builders/order-item-fake.builder';
+import { DeliveryAddressFakeBuilder } from './fake-builders/delivery-address-fake.builder';
+import { OnlineOrderFakeBuilder } from './fake-builders/online-order-fake.builder';
 
 export class OnlineOrderId extends Uuid {}
 
 export enum OrderStatus {
-  PENDING = 'PENDING',
-  CONFIRMED = 'CONFIRMED',
-  PREPARING = 'PREPARING',
-  OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY',
-  DELIVERED = 'DELIVERED',
-  CANCELLED = 'CANCELLED'
+  PENDING = 'PENDING', // Pendente
+  CONFIRMED = 'CONFIRMED', // Confirmado
+  PREPARING = 'PREPARING', // Preparando
+  OUT_FOR_DELIVERY = 'OUT_FOR_DELIVERY', // Saiu para entrega
+  DELIVERED = 'DELIVERED', // Entregue
+  CANCELLED = 'CANCELLED' // Cancelado
 }
 
 export type OrderItemProps = {
@@ -69,6 +71,8 @@ export class OrderItem {
     );
   }
 
+  
+
   toJSON() {
     return {
       product_id: this.product_id.id,
@@ -77,6 +81,10 @@ export class OrderItem {
       unit_price: this.unit_price.value,
       subtotal: this.subtotal.value
     };
+  }
+
+  static fake() {
+    return OrderItemFakeBuilder;
   }
 }
 
@@ -136,6 +144,10 @@ export class DeliveryAddress {
       latitude: this.latitude,
       longitude: this.longitude
     };
+  }
+
+  static fake() {
+    return DeliveryAddressFakeBuilder;
   }
 }
 
@@ -234,10 +246,8 @@ export class OnlineOrder extends AggregateRoot {
   }
 
   validate(fields?: string[]): boolean {
-    // TODO: Implementar validator quando criado
-    // const validator = OnlineOrderValidatorFactory.create();
-    // return validator.validate(this.notification, this, fields);
-    return true;
+    const validator = OnlineOrderValidatorFactory.create();
+    return validator.validate(this.notification, this, fields);
   }
 
   // MÉTODOS DE NEGÓCIO - APENAS REGRAS DE NEGÓCIO
@@ -473,10 +483,9 @@ export class OnlineOrder extends AggregateRoot {
     this.total = this.calculateTotal();
   }
 
-  // TODO: Implementar fake builder quando criado
-  // static fake(): OnlineOrderFakeBuilder {
-  //   return OnlineOrderFakeBuilder.anOnlineOrder();
-  // }
+  static fake() {
+    return OnlineOrderFakeBuilder;
+  }
 
   toJSON() {
     return {
