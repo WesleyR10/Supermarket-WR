@@ -4,12 +4,13 @@ import {
   IsOptional,
   IsBoolean,
   IsNumber,
-  IsEnum,
   validateSync,
+  IsUUID,
 } from 'class-validator';
 
 export type CreateCategoryInputConstructorProps = {
   name: string;
+  store_id: string;
   description?: string | null;
   is_active?: boolean;
   parent_category_id?: string | null;
@@ -24,6 +25,10 @@ export class CreateCategoryInput {
   @IsString()
   @IsNotEmpty()
   name: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  store_id: string;
 
   @IsString()
   @IsOptional()
@@ -60,6 +65,7 @@ export class CreateCategoryInput {
   constructor(props: CreateCategoryInputConstructorProps) {
     if (!props) return;
     this.name = props.name;
+    this.store_id = props.store_id;
     this.description = props.description;
     this.is_active = props.is_active;
     this.parent_category_id = props.parent_category_id;

@@ -1,10 +1,10 @@
-import { IUseCase } from '../../shared/application/use-case.interface';
-import { EntityValidationError } from '../../shared/domain/validators/validation.error';
-import { FieldsErrors } from '../../shared/domain/validators/validator-fields-interface';
-import { Category } from '../domain/category.aggregate';
-import { ICategoryRepository } from '../domain/repositories/category.repository.interface';
+import { IUseCase } from '../../../../shared/application/use-case.interface';
+import { EntityValidationError } from '../../../../shared/domain/validators/validation.error';
+import { FieldsErrors } from '../../../../shared/domain/validators/validator-fields-interface';
+import { Category } from '../../../domain/category.aggregate';
+import { ICategoryRepository } from '../../../domain/repositories/category.repository.interface';
+import { CategoryOutput,CategoryOutputMapper  } from '../common/category-output';
 import { CreateCategoryInput } from './create-category.input';
-import { CategoryOutputMapper, CreateCategoryOutput } from './create-category.output';
 
 export class CreateCategoryUseCase
   implements IUseCase<CreateCategoryInput, CreateCategoryOutput>
@@ -21,10 +21,11 @@ export class CreateCategoryUseCase
     // Validações de domínio específicas do supermercado
     this.validateBusinessRules(entity);
 
-    if (entity.notification.hasErrors()) {
+     if (entity.notification.hasErrors()) {
       const errors = this.convertNotificationToFieldsErrors(entity.notification.toJSON());
       throw new EntityValidationError([errors]);
     }
+
 
     // Persistência
     await this.categoryRepo.insert(entity);
@@ -130,7 +131,7 @@ export class CreateCategoryUseCase
 
   private validateBusinessRules(entity: Category): void {
     // Regras de negócio específicas do supermercado
-
+  
     // Regra: Categorias perecíveis devem ter controle de validade
     if (entity.isPerishableCategory() && !entity.requires_expiry_date) {
       entity.notification.addError(
@@ -138,7 +139,7 @@ export class CreateCategoryUseCase
         'requires_expiry_date'
       );
     }
-
+  
     // Regra: Categorias que devem ter tax rate não podem ter tax_rate null
     if (entity.shouldHaveTaxRate() && entity.tax_rate === null) {
       entity.notification.addError(
@@ -147,21 +148,7 @@ export class CreateCategoryUseCase
       );
     }
 
-    // Regra: Categorias de medicamentos não podem ser elegíveis para promoções
-    if (!entity.isPromotionEligible() && entity.name.toLowerCase().includes('medicamento')) {
-      entity.notification.addError(
-        'Medication categories cannot be promotion eligible',
-        'name'
-      );
-    }
-
-    // Regra: Display order deve ser único por categoria pai (será validado no repositório em implementação futura)
-    // Por ora, validamos apenas se é um número válido
-
-    // Regra: Margem padrão muito alta deve gerar aviso (não erro)
-    if (entity.default_margin_percentage && entity.default_margin_percentage > 200) {
-      // Log warning para análise posterior, mas não bloqueia a criação
-      console.warn(`High margin percentage (${entity.default_margin_percentage}%) for category: ${entity.name}`);
-    }
   }
 } 
+
+export type CreateCategoryOutput = CategoryOutput
