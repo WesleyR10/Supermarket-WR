@@ -5,7 +5,6 @@ import {
   IsNumber,
   IsEnum,
   IsArray,
-  IsDate,
   ValidateNested,
   validateSync,
 } from 'class-validator';
@@ -54,17 +53,21 @@ export class CreateSaleInput {
   @IsNumber()
   register_number: number;
 
-  @IsArray()
-  @ValidateNested({ each: true })
-  @Type(() => SaleItemInput)
-  items: SaleItemInput[];
-
   @IsEnum(PaymentMethod)
   payment_method: PaymentMethod;
+
+  @IsOptional()
+  @IsNumber()
+  tax_rate?: number; // ✅ NOVO: Taxa de imposto opcional
 
   @IsNumber()
   @IsOptional()
   discount_amount?: number;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SaleItemInput)
+  items: SaleItemInput[];
 
   constructor(props: CreateSaleInputConstructorProps) {
     if (!props) return;
@@ -82,4 +85,4 @@ export class ValidateCreateSaleInput {
   static validate(input: CreateSaleInput) {
     return validateSync(input);
   }
-} 
+}

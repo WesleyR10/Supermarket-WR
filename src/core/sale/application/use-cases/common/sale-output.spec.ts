@@ -1,3 +1,4 @@
+import 'reflect-metadata';
 import { Sale, PaymentMethod } from '../../../domain/sale.aggregate';
 import { SaleOutputMapper } from './sale-output';
 
@@ -38,7 +39,10 @@ describe('SaleOutputMapper Unit Tests', () => {
       total_amount: sale.total_amount,
       discount_amount: 0,
       tax_amount: sale.tax_amount,
-      payment_method: 'CREDIT_CARD',
+      tax_rate: 0,
+      subtotal_with_discount: sale.getSubtotalWithDiscount(),
+      final_total: sale.getFinalTotal(),
+      payment_method: 'credit_card', // Enum em minúsculo
       sale_status: sale.sale_status,
       register_number: 1,
       sale_date: sale.sale_date,
@@ -57,7 +61,7 @@ describe('SaleOutputMapper Unit Tests', () => {
           quantity: 1,
           unit_price: 25.99,
           discount_percentage: 5,
-          total_price: 24.69
+          total_price: 24.6905 // Valor preciso calculado
         }
       ]
     });
@@ -92,7 +96,10 @@ describe('SaleOutputMapper Unit Tests', () => {
       total_amount: sale.total_amount,
       discount_amount: 0,
       tax_amount: sale.tax_amount,
-      payment_method: 'CASH',
+      tax_rate: 0,
+      subtotal_with_discount: sale.getSubtotalWithDiscount(),
+      final_total: sale.getFinalTotal(),
+      payment_method: 'cash', // Enum em minúsculo
       sale_status: sale.sale_status,
       register_number: 2,
       sale_date: sale.sale_date,
@@ -104,7 +111,7 @@ describe('SaleOutputMapper Unit Tests', () => {
           quantity: 3,
           unit_price: 15.49,
           discount_percentage: 10,
-          total_price: 41.82
+          total_price: 41.823 // Valor preciso calculado
         }
       ]
     });
@@ -152,7 +159,10 @@ describe('SaleOutputMapper Unit Tests', () => {
       total_amount: sale.total_amount,
       discount_amount: 10.00,
       tax_amount: sale.tax_amount,
-      payment_method: 'PIX',
+      tax_rate: 0,
+      subtotal_with_discount: sale.getSubtotalWithDiscount(),
+      final_total: sale.getFinalTotal(),
+      payment_method: 'pix', // Enum em minúsculo
       sale_status: sale.sale_status,
       register_number: 3,
       sale_date: sale.sale_date,
@@ -183,4 +193,4 @@ describe('SaleOutputMapper Unit Tests', () => {
       ]
     });
   });
-}); 
+});
