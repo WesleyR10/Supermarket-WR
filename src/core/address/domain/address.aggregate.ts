@@ -1,6 +1,7 @@
 import { AggregateRoot } from '../../shared/domain/aggregate-root';
 import { Uuid } from '../../shared/domain/value-objects/uuid.vo';
 import { AddressValidatorFactory } from './address.validator';
+import { AddressFakeBuilder } from './address-fake.builder';
 
 export class AddressId extends Uuid {}
 
@@ -58,6 +59,8 @@ export type AddressCreateCommand = {
   address_type: AddressType;
   is_primary?: boolean;
   status?: AddressStatus;
+
+  created_at?: Date;
 };
 
 export class Address extends AggregateRoot {
@@ -233,4 +236,8 @@ export class Address extends AggregateRoot {
       deleted_at: this.deleted_at,
     };
   }
-} 
+
+  static fake() {
+    return AddressFakeBuilder;
+  }
+}
