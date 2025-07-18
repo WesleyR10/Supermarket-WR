@@ -3,38 +3,7 @@ import { ValueObject } from '../../shared/domain/value-object';
 import { Uuid } from '../../shared/domain/value-objects/uuid.vo';
 import { EmployeeFakeBuilder } from './employee-fake.builder';
 import { EmployeeValidatorFactory } from './employee.validator';
-
-export enum EmployeeRole {
-  ADMIN = 'ADMIN', // ADMIN GLOBAL
-  MANAGER = 'MANAGER', // GERENTE
-  OPERATOR = 'OPERATOR', // OPERADOR
-  CASHIER = 'CASHIER', // CAIXA
-  STORE_MANAGER = 'STORE_MANAGER', // GERENTE DA LOJA
-  STORE_CASHIER = 'STORE_CASHIER', // CAIXA DA LOJA
-  STORE_OPERATOR = 'STORE_OPERATOR', // OPERADOR DA LOJA
-}
-
-export enum EmployeeDepartment {
-  MARKETING = 'MARKETING', // MARKETING
-  SALES = 'SALES', // VENDAS
-  IT = 'IT', // TECNOLOGIA DA INFORMAÇÃO
-  HR = 'HR', // RECURSOS HUMANOS
-  FINANCE = 'FINANCE', // FINANCEIRO
-  CUSTOMER_SERVICE = 'CUSTOMER_SERVICE', // ATENDIMENTO AO CLIENTE
-  SUPPORT = 'SUPPORT', // SUPORTE
-  LOGISTICS = 'LOGÍSTICA', // LOGÍSTICA
-  PRODUCTION = 'PRODUÇÃO', // PRODUÇÃO
-  QUALITY_CONTROL = 'QUALITY_CONTROL', // CONTROLE DE QUALIDADE
-  PURCHASING = 'PURCHASING', // COMPRAS
-  ACCOUNTING = 'ACCOUNTING', // CONTABILIDADE
-  ADMINISTRATION = 'ADMINISTRATION', // ADMINISTRAÇÃO
-  INVENTORY = 'INVENTORY', // ESTOQUE
-  SECURITY = 'SECURITY', // SEGURANÇA
-  CLEANING = 'CLEANING', // LIMPEZA
-  MAINTENANCE = 'MAINTENANCE', // MANUTENÇÃO
-  RECEPTION = 'RECEPTION', // RECEPÇÃO
-  OTHER = 'OTHER', // OUTROS
-}
+import { EmployeeRole, EmployeeDepartment } from './employee.enums';
 
 export type EmployeeConstructorProps = {
   employee_id?: EmployeeId;

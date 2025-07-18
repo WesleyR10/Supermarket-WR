@@ -1,7 +1,8 @@
-import { ISearchableRepository } from '../../shared/domain/repository/repository-interface';
-import { SearchParams } from '../../shared/domain/repository/search-params';
-import { SearchResult } from '../../shared/domain/repository/search-result';
-import { Employee, EmployeeId, EmployeeRole, EmployeeDepartment } from './employee.aggregate';
+import { ISearchableRepository } from '../../../shared/domain/repository/repository-interface';
+import { SearchParams } from '../../../shared/domain/repository/search-params';
+import { SearchResult } from '../../../shared/domain/repository/search-result';
+import { Employee, EmployeeId} from '../employee.aggregate';
+import { EmployeeDepartment, EmployeeRole } from '../employee.enums';
 
 export type EmployeeFilter = {
   stores_id?: string;
@@ -18,8 +19,31 @@ export type EmployeeFilter = {
 };
 
 export class EmployeeSearchParams extends SearchParams<EmployeeFilter> {
-  constructor(props: SearchParams<EmployeeFilter>) {
-    super(props);
+  get filter(): EmployeeFilter | null {
+    return this._filter;
+  }
+
+  protected set filter(value: EmployeeFilter | null) {
+    const _value =
+      !value || (value as unknown) === '' || typeof value !== 'object'
+        ? null
+        : value;
+
+    const filter = {
+      ...(_value && _value.stores_id && { stores_id: `${_value.stores_id}` }),
+      ...(_value && _value.name && { name: `${_value.name}` }),
+      ...(_value && _value.email && { email: `${_value.email}` }),
+      ...(_value && _value.role && { role: _value.role }),
+      ...(_value && _value.department && { department: _value.department }),
+      ...(_value && _value.is_active !== undefined && { is_active: _value.is_active }),
+      ...(_value && _value.employee_code && { employee_code: `${_value.employee_code}` }),
+      ...(_value && _value.hired_after && { hired_after: _value.hired_after }),
+      ...(_value && _value.hired_before && { hired_before: _value.hired_before }),
+      ...(_value && _value.salary_min !== undefined && { salary_min: _value.salary_min }),
+      ...(_value && _value.salary_max !== undefined && { salary_max: _value.salary_max }),
+    };
+
+    this._filter = Object.keys(filter).length === 0 ? null : filter;
   }
 }
 
@@ -154,4 +178,4 @@ export interface IEmployeeRepository extends ISearchableRepository<
   
   // Funcionários sem permissões adequadas
   findUnderPrivilegedEmployees(): Promise<Employee[]>;
-} 
+}

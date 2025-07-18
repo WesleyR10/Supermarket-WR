@@ -1,5 +1,6 @@
-import { IsString, IsEmail, IsOptional, IsBoolean, IsDate, IsNumber, Min, Max, Length, IsIn, IsObject, IsUUID } from 'class-validator';
-import { Employee, EmployeeRole, EmployeeDepartment } from './employee.aggregate';
+import { IsEmail,Min, Max, Length, IsIn, IsUUID } from 'class-validator';
+import { Employee } from './employee.aggregate';
+import { EmployeeRole, EmployeeDepartment } from './employee.enums';
 import { ClassValidatorFields } from '../../shared/domain/validators/class-validator-fields';
 import { Notification } from '../../shared/domain/validators/notification';
 
@@ -56,4 +57,4 @@ export class EmployeeValidatorFactory {
   static create(): EmployeeValidator {
     return new EmployeeValidator();
   }
-} 
+}

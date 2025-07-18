@@ -1,5 +1,6 @@
-import { Employee, EmployeeConstructorProps, EmployeeId, EmployeeRole, EmployeeDepartment } from './employee.aggregate';
+import { Employee, EmployeeConstructorProps, EmployeeId } from './employee.aggregate';
 import { Uuid } from '../../shared/domain/value-objects/uuid.vo';
+import { EmployeeDepartment, EmployeeRole } from './employee.enums';
 
 export class EmployeeFakeBuilder {
   private _employee_id: EmployeeId;
