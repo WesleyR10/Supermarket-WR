@@ -124,8 +124,8 @@ describe('ClientInMemoryRepository', () => {
     beforeEach(async () => {
       const clients: Client[] = [];
 
-      // Criar 4 clientes ativos para store-1
-      for (let i = 1; i <= 4; i++) {
+      // Criar 3 clientes ativos para store-1
+      for (let i = 1; i <= 3; i++) {
         clients.push(
           Client.fake()
             .aClient()
@@ -136,6 +136,18 @@ describe('ClientInMemoryRepository', () => {
             .build()
         );
       }
+
+      // Cliente 4
+      // ✅ ADICIONAR: Cliente com loyalty_card_number para teste 
+      clients.push(
+        Client.fake()
+          .aClient()
+          .withUserId('user-card-test')
+          .withStoresId('store-1')
+          .withLoyaltyCardNumber('CARD123')
+          .activate()
+          .build()
+      );
 
       // Criar 5 clientes ativos para store-2
       for (let i = 5; i <= 9; i++) {
