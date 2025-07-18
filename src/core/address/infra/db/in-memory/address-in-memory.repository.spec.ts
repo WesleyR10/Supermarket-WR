@@ -10,16 +10,7 @@ describe('AddressInMemoryRepository', () => {
   describe('applyFilter method', () => {
     it('should not filter items when filter object is null', async () => {
       const items = [
-        Address.create({
-          client_id: '123',
-          street: 'Rua das Flores',
-          number: '123',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.HOME,
-        })
+        Address.fake().anAddress().withClientId('123').build()
       ];
       const filterSpy = jest.spyOn(items, 'filter' as any);
 
@@ -30,26 +21,8 @@ describe('AddressInMemoryRepository', () => {
 
     it('should filter items by client_id', async () => {
       const items = [
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua A',
-          number: '123',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.HOME,
-        }),
-        Address.create({
-          client_id: 'client-2',
-          street: 'Rua B',
-          number: '456',
-          neighborhood: 'Jardins',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.WORK,
-        }),
+        Address.fake().anAddress().withClientId('client-1').withStreet('Rua A').withAddressType(AddressType.HOME).build(),
+        Address.fake().anAddress().withClientId('client-2').withStreet('Rua B').withAddressType(AddressType.WORK).build(),
       ];
 
       const filter: AddressFilter = { client_id: 'client-1' };
@@ -59,26 +32,8 @@ describe('AddressInMemoryRepository', () => {
 
     it('should filter items by address_type', async () => {
       const items = [
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua A',
-          number: '123',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.HOME,
-        }),
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua B',
-          number: '456',
-          neighborhood: 'Jardins',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.WORK,
-        }),
+        Address.fake().anAddress().withClientId('client-1').withStreet('Rua A').withAddressType(AddressType.HOME).build(),
+        Address.fake().anAddress().withClientId('client-1').withStreet('Rua B').withAddressType(AddressType.WORK).build(),
       ];
 
       const filter: AddressFilter = { address_type: AddressType.HOME };
@@ -88,26 +43,8 @@ describe('AddressInMemoryRepository', () => {
 
     it('should filter items by city (case insensitive)', async () => {
       const items = [
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua A',
-          number: '123',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.HOME,
-        }),
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua B',
-          number: '456',
-          neighborhood: 'Centro',
-          city: 'Rio de Janeiro',
-          state: 'RJ',
-          zipcode: '20000-000',
-          address_type: AddressType.WORK,
-        }),
+        Address.fake().anAddress().withClientId('client-1').withCity('São Paulo').build(),
+        Address.fake().anAddress().withClientId('client-1').withCity('Rio de Janeiro').withState('RJ').build(),
       ];
 
       const filter: AddressFilter = { city: 'são paulo' };
@@ -117,39 +54,21 @@ describe('AddressInMemoryRepository', () => {
 
     it('should filter items by multiple criteria', async () => {
       const items = [
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua A',
-          number: '123',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.HOME,
-          is_primary: true,
-        }),
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua B',
-          number: '456',
-          neighborhood: 'Jardins',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.WORK,
-          is_primary: false,
-        }),
-        Address.create({
-          client_id: 'client-2',
-          street: 'Rua C',
-          number: '789',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.HOME,
-          is_primary: true,
-        }),
+        Address.fake().anAddress()
+          .withClientId('client-1')
+          .withAddressType(AddressType.HOME)
+          .withIsPrimary(true)
+          .build(),
+        Address.fake().anAddress()
+          .withClientId('client-1')
+          .withAddressType(AddressType.WORK)
+          .withIsPrimary(false)
+          .build(),
+        Address.fake().anAddress()
+          .withClientId('client-2')
+          .withAddressType(AddressType.HOME)
+          .withIsPrimary(true)
+          .build(),
       ];
 
       const filter: AddressFilter = {
@@ -166,39 +85,24 @@ describe('AddressInMemoryRepository', () => {
     it('should sort by created_at DESC when sort param is null', async () => {
       const created_at = new Date();
       const items = [
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua A',
-          number: '123',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.HOME,
-          created_at,
-        }),
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua B',
-          number: '456',
-          neighborhood: 'Jardins',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.WORK,
-          created_at: new Date(created_at.getTime() + 100),
-        }),
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua C',
-          number: '789',
-          neighborhood: 'Vila Madalena',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.DELIVERY,
-          created_at: new Date(created_at.getTime() + 200),
-        }),
+        Address.fake().anAddress()
+          .withClientId('client-1')
+          .withStreet('Rua A')
+          .withAddressType(AddressType.HOME)
+          .withCreatedAt(created_at)
+          .build(),
+        Address.fake().anAddress()
+          .withClientId('client-1')
+          .withStreet('Rua B')
+          .withAddressType(AddressType.WORK)
+          .withCreatedAt(new Date(created_at.getTime() + 100))
+          .build(),
+        Address.fake().anAddress()
+          .withClientId('client-1')
+          .withStreet('Rua C')
+          .withAddressType(AddressType.DELIVERY)
+          .withCreatedAt(new Date(created_at.getTime() + 200))
+          .build(),
       ];
 
       const itemsSorted = repository['applySort'](items, null, null);
@@ -207,36 +111,9 @@ describe('AddressInMemoryRepository', () => {
 
     it('should sort by street', async () => {
       const items = [
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua C',
-          number: '123',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.HOME,
-        }),
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua A',
-          number: '456',
-          neighborhood: 'Jardins',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.WORK,
-        }),
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua B',
-          number: '789',
-          neighborhood: 'Vila Madalena',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.DELIVERY,
-        }),
+        Address.fake().anAddress().withStreet('Rua C').withAddressType(AddressType.HOME).build(),
+        Address.fake().anAddress().withStreet('Rua A').withAddressType(AddressType.WORK).build(),
+        Address.fake().anAddress().withStreet('Rua B').withAddressType(AddressType.DELIVERY).build(),
       ];
 
       let itemsSorted = repository['applySort'](items, 'street', 'asc');
@@ -250,50 +127,42 @@ describe('AddressInMemoryRepository', () => {
   describe('domain specific methods', () => {
     beforeEach(() => {
       const addresses = [
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua A',
-          number: '123',
-          neighborhood: 'Centro',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.HOME,
-          is_primary: true,
-        }),
-        Address.create({
-          client_id: 'client-1',
-          street: 'Rua B',
-          number: '456',
-          neighborhood: 'Jardins',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01234-567',
-          address_type: AddressType.WORK,
-          is_primary: false,
-        }),
-        Address.create({
-          store_id: 'store-1',
-          street: 'Av. Paulista',
-          number: '1000',
-          neighborhood: 'Bela Vista',
-          city: 'São Paulo',
-          state: 'SP',
-          zipcode: '01310-100',
-          address_type: AddressType.HEADQUARTERS,
-          is_primary: true,
-        }),
-        Address.create({
-          client_id: 'client-2',
-          street: 'Rua C',
-          number: '789',
-          neighborhood: 'Copacabana',
-          city: 'Rio de Janeiro',
-          state: 'RJ',
-          zipcode: '22000-000',
-          address_type: AddressType.DELIVERY,
-          is_primary: true,
-        }),
+        Address.fake().anAddress()
+          .withClientId('client-1')
+          .withStreet('Rua A')
+          .withCity('São Paulo')
+          .withState('SP')
+          .withAddressType(AddressType.HOME)
+          .withIsPrimary(true)
+          .build(),
+        Address.fake().anAddress()
+          .withClientId('client-1')
+          .withStreet('Rua B')
+          .withCity('São Paulo')
+          .withState('SP')
+          .withAddressType(AddressType.WORK)
+          .withIsPrimary(false)
+          .build(),
+        Address.fake().anAddress()
+          .withStoreId('store-1')
+          .withStreet('Av. Paulista')
+          .withNumber('1000')
+          .withNeighborhood('Bela Vista')
+          .withCity('São Paulo')
+          .withState('SP')
+          .withZipcode('01310-100')
+          .withAddressType(AddressType.HEADQUARTERS)
+          .withIsPrimary(true)
+          .build(),
+        Address.fake().anAddress()
+          .withClientId('client-2')
+          .withStreet('Rua C')
+          .withCity('Rio de Janeiro')
+          .withState('RJ')
+          .withZipcode('22000-000')
+          .withAddressType(AddressType.DELIVERY)
+          .withIsPrimary(true)
+          .build(),
       ];
       repository.items = addresses;
     });
@@ -341,4 +210,39 @@ describe('AddressInMemoryRepository', () => {
       expect(spAddresses.every(addr => addr.state === 'SP')).toBe(true);
     });
   });
+
+  describe('Address business rules', () => {
+  describe('Single primary address rule', () => {
+    it('should allow creating primary address when client has no primary address', () => {
+      const addresses = [
+        Address.fake().anAddress().withClientId('client-1').withIsPrimary(false).build()
+      ];
+      
+      expect(() => {
+        Address.validateSinglePrimaryAddress(addresses, 'client-1', true);
+      }).not.toThrow();
+    });
+
+    it('should throw error when trying to create second primary address for same client', () => {
+      const addresses = [
+        Address.fake().anAddress().withClientId('client-1').withIsPrimary(true).build()
+      ];
+      
+      expect(() => {
+        Address.validateSinglePrimaryAddress(addresses, 'client-1', true);
+      }).toThrow('Cliente client-1 já possui um endereço primário');
+    });
+
+    it('should allow changing primary address', () => {
+      const address1 = Address.fake().anAddress().withClientId('client-1').withIsPrimary(true).build();
+      const address2 = Address.fake().anAddress().withClientId('client-1').withIsPrimary(false).build();
+      const addresses = [address1, address2];
+      
+      Address.changePrimaryAddress(addresses, 'client-1', address2.address_id.id);
+      
+      expect(address1.is_primary).toBe(false);
+      expect(address2.is_primary).toBe(true);
+    });
+  });
+});
 });

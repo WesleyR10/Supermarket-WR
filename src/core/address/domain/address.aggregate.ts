@@ -144,6 +144,42 @@ export class Address extends AggregateRoot {
     this.updated_at = new Date();
   }
 
+  // Validação de regra de negócio: apenas um endereço primário por cliente
+  static validateSinglePrimaryAddress(addresses: Address[], clientId: string, newAddressIsPrimary: boolean): void {
+    if (!newAddressIsPrimary) return;
+    
+    const existingPrimaryAddress = addresses.find(
+      addr => addr.client_id === clientId && addr.is_primary && addr.isActive()
+    );
+    
+    if (existingPrimaryAddress) {
+      throw new Error(`Cliente ${clientId} já possui um endereço primário. Apenas um endereço primário é permitido por cliente.`);
+    }
+  }
+
+  // Método para trocar endereço primário
+  static changePrimaryAddress(addresses: Address[], clientId: string, newPrimaryAddressId: string): void {
+    // Remove o status primário do endereço atual
+    const currentPrimary = addresses.find(
+      addr => addr.client_id === clientId && addr.is_primary && addr.isActive()
+    );
+    
+    if (currentPrimary) {
+      currentPrimary.unsetAsPrimary();
+    }
+    
+    // Define o novo endereço como primário
+    const newPrimary = addresses.find(
+      addr => addr.address_id.id === newPrimaryAddressId && addr.client_id === clientId && addr.isActive()
+    );
+    
+    if (!newPrimary) {
+      throw new Error('Endereço não encontrado ou não pertence ao cliente.');
+    }
+    
+    newPrimary.setAsPrimary();
+  }
+
   updateAddress(props: {
     street?: string;
     number?: string;

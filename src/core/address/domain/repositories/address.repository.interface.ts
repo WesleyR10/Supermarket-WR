@@ -35,5 +35,8 @@ export interface IAddressRepository
   findByAddressType(addressType: AddressType): Promise<Address[]>; // Retorna todos os endereços de um tipo específico
   findByZipcode(zipcode: string): Promise<Address[]>; // Retorna todos os endereços com um determinado CEP
   findByCity(city: string): Promise<Address[]>; // Retorna todos os endereços com um determinado município
-  findByState(state: string): Promise<Address[]>; // Retorna todos os endereços com um determinado estado 
+  findByState(state: string): Promise<Address[]>; // Retorna todos os endereços com um determinado estado
+  findActiveAddressesByClientId(clientId: string): Promise<Address[]>; // Retorna todos os endereços ativos de um cliente
+  findPrimaryAddressByClientId(clientId: string): Promise<Address | null>; // Retorna o endereço principal de um cliente
+  changePrimaryAddress(clientId: string, newPrimaryAddressId: string): Promise<void>; // Altera o endereço principal de um cliente
 }

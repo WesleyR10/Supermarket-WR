@@ -175,21 +175,6 @@ Antes de fazer um commit, verifique:
 - [ ] Descrição é clara e concisa
 - [ ] Não há dados sensíveis no commit
 
-## 🔧 Configuração do Projeto
-
-### Commitlint
-
-O projeto usa `@commitlint/config-conventional` para validar commits.
-
-### Pre-commit Hooks
-
-Recomenda-se configurar hooks para:
-
-- Linting do código
-- Execução de testes
-- Validação de commits
-- Verificação de formatação
-
 ## 📚 Recursos Adicionais
 
 - [Conventional Commits](https://www.conventionalcommits.org/)

@@ -28,6 +28,7 @@ export class AddressInMemoryRepository
     'is_primary'
   ];
 
+  // Métodos específicos do domínio Address
   async findByClientId(clientId: string): Promise<Address[]> {
     return this.items.filter(item => item.client_id === clientId);
   }
@@ -152,5 +153,44 @@ export class AddressInMemoryRepository
     }
 
     return super.applySort(items, sort, sort_dir as any);
+  }
+
+  // Novos métodos para suportar a regra de negócio
+  async findActiveAddressesByClientId(clientId: string): Promise<Address[]> {
+    return this.items.filter(item => 
+      item.client_id === clientId && item.isActive()
+    );
+  }
+
+  async findPrimaryAddressByClientId(clientId: string): Promise<Address | null> {
+    const address = this.items.find(item => 
+      item.client_id === clientId && item.is_primary && item.isActive()
+    );
+    return address || null;
+  }
+
+  async changePrimaryAddress(clientId: string, newPrimaryAddressId: string): Promise<void> {
+    const addresses = await this.findActiveAddressesByClientId(clientId);
+    Address.changePrimaryAddress(addresses, clientId, newPrimaryAddressId);
+  }
+
+  // Override do método insert para validar a regra de negócio
+  async insert(entity: Address): Promise<void> {
+    if (entity.client_id && entity.is_primary) {
+      const clientAddresses = await this.findActiveAddressesByClientId(entity.client_id);
+      Address.validateSinglePrimaryAddress(clientAddresses, entity.client_id, entity.is_primary);
+    }
+    await super.insert(entity);
+  }
+
+  // Override do método update para validar a regra de negócio
+  async update(entity: Address): Promise<void> {
+    if (entity.client_id && entity.is_primary) {
+      const clientAddresses = await this.findActiveAddressesByClientId(entity.client_id);
+      // Remove o endereço atual da lista para não conflitar consigo mesmo
+      const otherAddresses = clientAddresses.filter(addr => addr.address_id.id !== entity.address_id.id);
+      Address.validateSinglePrimaryAddress(otherAddresses, entity.client_id, entity.is_primary);
+    }
+    await super.update(entity);
   }
 }
