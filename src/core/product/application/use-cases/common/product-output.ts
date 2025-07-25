@@ -27,7 +27,6 @@ export type ProductOutput = {
 export class ProductOutputMapper {
   static toOutput(entity: Product): ProductOutput {
     const { product_id, ...otherProps } = entity.toJSON();
-    
     return {
       id: entity.product_id.id,
       ...otherProps,

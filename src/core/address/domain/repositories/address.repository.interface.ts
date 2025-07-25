@@ -15,7 +15,32 @@ export type AddressFilter = {
   zipcode?: string;
 };
 
-export class AddressSearchParams extends SearchParams<AddressFilter> {}
+export class AddressSearchParams extends SearchParams<AddressFilter> {
+  get filter(): AddressFilter | null {
+    return this._filter;
+  }
+
+  protected set filter(value: AddressFilter | null) {
+    const _value =
+      !value || (value as unknown) === '' || typeof value !== 'object'
+        ? null
+        : value;
+
+    const filter = {
+      ...(_value && _value.client_id && { client_id: `${_value.client_id}` }),
+      ...(_value && _value.store_id && { store_id: `${_value.store_id}` }),
+      ...(_value && _value.supplier_id && { supplier_id: `${_value.supplier_id}` }),
+      ...(_value && _value.address_type && { address_type: _value.address_type }),
+      ...(_value && _value.status && { status: _value.status }),
+      ...(_value && _value.is_primary !== undefined && { is_primary: _value.is_primary }),
+      ...(_value && _value.city && { city: `${_value.city}` }),
+      ...(_value && _value.state && { state: `${_value.state}` }),
+      ...(_value && _value.zipcode && { zipcode: `${_value.zipcode}` }),
+    };
+
+    this._filter = Object.keys(filter).length === 0 ? null : filter;
+  }
+}
 
 export class AddressSearchResult extends SearchResult<Address> {}
 

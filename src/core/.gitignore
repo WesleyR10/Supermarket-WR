@@ -1,0 +1,14 @@
+# Documentação interna dos bounded contexts
+*/README.md
+
+# Arquivos temporários de documentação
+*.tmp.md
+*.draft.md
+
+# Arquivos de backup da documentação
+*.md.bak
+*.md.backup
+
+# Arquivos de rascunho
+draft-*.md
+temp-*.md

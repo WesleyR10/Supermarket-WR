@@ -12,8 +12,8 @@ export type CreateInventoryInputConstructorProps = {
   product_id: string;
   store_id: string;
   quantity: number;
-  minimum_quantity: number;
-  maximum_quantity: number;
+  min_stock: number;
+  max_stock: number;
   unit_cost: number;
   unit_price: number;
   supplier_id?: string | null;
@@ -36,10 +36,10 @@ export class CreateInventoryInput {
   quantity: number;
 
   @IsNumber()
-  minimum_quantity: number;
+  min_stock: number;
 
   @IsNumber()
-  maximum_quantity: number;
+  max_stock: number;
 
   @IsNumber()
   unit_cost: number;
@@ -72,8 +72,8 @@ export class CreateInventoryInput {
     this.product_id = props.product_id;
     this.store_id = props.store_id;
     this.quantity = props.quantity;
-    this.minimum_quantity = props.minimum_quantity;
-    this.maximum_quantity = props.maximum_quantity;
+    this.min_stock = props.min_stock;
+    this.max_stock = props.max_stock;
     this.unit_cost = props.unit_cost;
     this.unit_price = props.unit_price;
     this.supplier_id = props.supplier_id;

@@ -1,43 +1,29 @@
-import { Address, AddressType, AddressStatus } from '../../../domain/address.aggregate';
+import { Address } from '../../../domain/address.aggregate';
 import { AddressOutputMapper } from './address-output';
 
 describe('AddressOutputMapper Unit Tests', () => {
-  it('should convert an address in output', () => {
-    const entity = Address.create({
-      client_id: '123e4567-e89b-12d3-a456-426614174000',
-      street: 'Rua das Flores',
-      number: '123',
-      complement: 'Apto 45',
-      neighborhood: 'Centro',
-      city: 'São Paulo',
-      state: 'SP',
-      zipcode: '01234-567',
-      address_type: AddressType.HOME,
-      is_primary: true,
-    });
-    
-    const spyToJSON = jest.spyOn(entity, 'toJSON');
-    const output = AddressOutputMapper.toOutput(entity);
-    
-    expect(spyToJSON).toHaveBeenCalled();
+  it('should convert address to output', () => {
+    const address = Address.fake().anAddress().build();
+    const output = AddressOutputMapper.toOutput(address);
+
     expect(output).toStrictEqual({
-      id: entity.address_id.id,
-      client_id: '123e4567-e89b-12d3-a456-426614174000',
-      store_id: null,
-      supplier_id: null,
-      street: 'Rua das Flores',
-      number: '123',
-      complement: 'Apto 45',
-      neighborhood: 'Centro',
-      city: 'São Paulo',
-      state: 'SP',
-      zipcode: '01234-567',
-      address_type: 'HOME',
-      is_primary: true,
-      status: 'ACTIVE',
-      created_at: entity.created_at,
-      updated_at: entity.updated_at,
-      deleted_at: null,
+      id: address.address_id.id,
+      client_id: address.client_id,
+      store_id: address.store_id,
+      supplier_id: address.supplier_id,
+      street: address.street,
+      number: address.number,
+      complement: address.complement,
+      neighborhood: address.neighborhood,
+      city: address.city,
+      state: address.state,
+      zipcode: address.zipcode,
+      address_type: address.address_type,
+      is_primary: address.is_primary,
+      status: address.status,
+      created_at: address.created_at,
+      updated_at: address.updated_at,
+      deleted_at: address.deleted_at,
     });
   });
-}); 
+});

@@ -46,7 +46,7 @@ describe('ProductOutputMapper Unit Tests', () => {
   });
 
   it('should convert a beverage product to output', () => {
-    const entity = Product.fake()
+    const entity = Product.fake().aProduct()
       .withBeverage()
       .withName('Coca-Cola 2L')
       .withBrand('Coca-Cola')
@@ -82,7 +82,7 @@ describe('ProductOutputMapper Unit Tests', () => {
   });
 
   it('should convert a meat product to output', () => {
-    const entity = Product.fake()
+    const entity = Product.fake().aProduct()
       .withMeatProduct()
       .withName('Carne Bovina Alcatra')
       .withBrand('Friboi')
@@ -119,7 +119,7 @@ describe('ProductOutputMapper Unit Tests', () => {
   });
 
   it('should convert a cleaning product to output', () => {
-    const entity = Product.fake()
+    const entity = Product.fake().aProduct()
       .withCleaningProduct()
       .withName('Detergente Ypê 500ml')
       .withBrand('Ypê')
@@ -155,7 +155,7 @@ describe('ProductOutputMapper Unit Tests', () => {
   });
 
   it('should convert a high-value product to output', () => {
-    const entity = Product.fake()
+    const entity = Product.fake().aProduct()
       .withHighValueProduct()
       .withName('Micro-ondas Panasonic 32L')
       .withBrand('Panasonic')
