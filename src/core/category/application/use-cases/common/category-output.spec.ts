@@ -32,6 +32,7 @@ describe('CategoryOutputMapper Unit Tests', () => {
       display_order: 1,
       icon_name: 'beverage-icon',
       created_at: entity.created_at,
+      updated_at: entity.updated_at,
     });
   });
 
@@ -73,6 +74,7 @@ describe('CategoryOutputMapper Unit Tests', () => {
       display_order: 2,
       icon_name: 'soda-icon',
       created_at: entity.created_at,
+      updated_at: entity.updated_at,
     });
   });
 }); 

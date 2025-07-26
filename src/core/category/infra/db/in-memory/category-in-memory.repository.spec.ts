@@ -1,5 +1,6 @@
 import { CategoryInMemoryRepository } from './category-in-memory.repository';
 import { Category, CategoryId } from '../../../domain/category.aggregate';
+import { CategoryFilter } from '../../../domain/repositories/category.repository.interface';
 
 describe('CategoryInMemoryRepository', () => {
   let repository: CategoryInMemoryRepository;
@@ -17,12 +18,13 @@ describe('CategoryInMemoryRepository', () => {
       ];
       repository.items = categories;
 
-      const filteredItems = await repository['applyFilter'](categories, 'alimentos');
+      const filter: CategoryFilter = { name: 'alimentos' };
+      const filteredItems = await repository['applyFilter'](categories, filter);
       expect(filteredItems).toHaveLength(1);
       expect(filteredItems[0].name).toBe('Alimentos');
     });
 
-    it('should filter categories by description (case insensitive)', async () => {
+    it('should filter categories by partial name match (case insensitive)', async () => {
       const categories = [
         Category.fake().aCategory().withName('Categoria 1').withDescription('Produtos alimentícios').build(),
         Category.fake().aCategory().withName('Categoria 2').withDescription('Produtos de limpeza').build(),
@@ -30,26 +32,9 @@ describe('CategoryInMemoryRepository', () => {
       ];
       repository.items = categories;
 
-      const filteredItems = await repository['applyFilter'](categories, 'alimentícios');
-      expect(filteredItems).toHaveLength(1);
-      expect(filteredItems[0].description).toBe('Produtos alimentícios');
-    });
-
-    it('should filter categories by icon_name (case insensitive)', async () => {
-      const categories = [
-        Category.fake().aCategory().withName('Categoria 1').build(),
-        Category.fake().aCategory().withName('Categoria 2').build(),
-        Category.fake().aCategory().withName('Categoria 3').build(),
-      ];
-      // Simulando icon_name
-      categories[0].setIcon('food-icon');
-      categories[1].setIcon('drink-icon');
-      categories[2].setIcon('clean-icon');
-      repository.items = categories;
-
-      const filteredItems = await repository['applyFilter'](categories, 'food');
-      expect(filteredItems).toHaveLength(1);
-      expect(filteredItems[0].icon_name).toBe('food-icon');
+      const filter: CategoryFilter = { name: 'categoria' };
+      const filteredItems = await repository['applyFilter'](categories, filter);
+      expect(filteredItems).toHaveLength(3);
     });
 
     it('should return all categories when filter is null', async () => {
@@ -70,8 +55,32 @@ describe('CategoryInMemoryRepository', () => {
       ];
       repository.items = categories;
 
-      const filteredItems = await repository['applyFilter'](categories, 'inexistente');
+      const filter: CategoryFilter = { name: 'inexistente' };
+      const filteredItems = await repository['applyFilter'](categories, filter);
       expect(filteredItems).toHaveLength(0);
+    });
+
+    it('should return all categories when filter object is empty', async () => {
+      const categories = [
+        Category.fake().aCategory().withName('Alimentos').build(),
+        Category.fake().aCategory().withName('Bebidas').build(),
+      ];
+      repository.items = categories;
+
+      const filter: CategoryFilter = {};
+      const filteredItems = await repository['applyFilter'](categories, filter);
+      expect(filteredItems).toHaveLength(2);
+    });
+
+    it('should return all categories when filter is null', async () => {
+      const categories = [
+        Category.fake().aCategory().build(),
+        Category.fake().aCategory().build(),
+      ];
+      repository.items = categories;
+
+      const filteredItems = await repository['applyFilter'](categories, null);
+      expect(filteredItems).toHaveLength(2);
     });
   });
 
@@ -173,17 +182,13 @@ describe('CategoryInMemoryRepository', () => {
   describe('Domain-specific methods', () => {
     beforeEach(() => {
       const categories = [
-        Category.fake().aCategory().withName('Ativa 1').activate().build(),
-        Category.fake().aCategory().withName('Inativa 1').deactivate().build(),
-        Category.fake().aCategory().withName('Ativa 2').activate().build(),
+        Category.fake().aCategory().withName('Ativa 1').activate().withRequiresExpiryDate(true).build(),
+        Category.fake().aCategory().withName('Inativa 1').deactivate().withRequiresExpiryDate(false).build(),
+        Category.fake().aCategory().withName('Ativa 2').activate().withRequiresExpiryDate(false).build(),
       ];
       // Set parent categories
       const parentId = new CategoryId();
       categories[1].setParentCategory(parentId);
-      
-      // Set expiry requirements
-      categories[0].setRequiresExpiryDate(true);
-      categories[2].setRequiresExpiryDate(false);
       
       repository.items = categories;
     });
@@ -211,6 +216,7 @@ describe('CategoryInMemoryRepository', () => {
       const perishableCategories = await repository.findPerishableCategories();
       expect(perishableCategories).toHaveLength(1);
       expect(perishableCategories[0].requires_expiry_date).toBe(true);
+      expect(perishableCategories[0].name).toBe('Ativa 1');
     });
 
     it('should find promotion eligible categories', async () => {
