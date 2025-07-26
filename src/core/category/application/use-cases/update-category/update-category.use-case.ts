@@ -6,14 +6,14 @@ import { NotFoundError } from '../../../../shared/domain/errors/not-found.error'
 import { EntityValidationError } from '../../../../shared/domain/validators/validation.error';
 import { FieldsErrors } from '../../../../shared/domain/validators/validator-fields-interface';
 import { UpdateCategoryInput } from './update-category.input';
-import { UpdateCategoryOutput } from './update-category.output';
+import { CategoryOutput, CategoryOutputMapper } from '../common/category-output';
 
 export class UpdateCategoryUseCase
-  implements IUseCase<UpdateCategoryInput, UpdateCategoryOutput>
+  implements IUseCase<UpdateCategoryInput, CategoryOutput>
 {
   constructor(private readonly categoryRepo: ICategoryRepository) {}
 
-  async execute(input: UpdateCategoryInput): Promise<UpdateCategoryOutput> {
+  async execute(input: UpdateCategoryInput): Promise<CategoryOutput> {
     // Validações de sintaxe
     this.validateInput(input);
 
@@ -47,7 +47,7 @@ export class UpdateCategoryUseCase
 
     await this.categoryRepo.update(category);
 
-    return this.toOutput(category);
+    return CategoryOutputMapper.toOutput(category);
   }
 
   private validateInput(input: UpdateCategoryInput): void {
@@ -172,20 +172,4 @@ export class UpdateCategoryUseCase
 
     return fieldsErrors;
   }
-
-  private toOutput(category: Category): UpdateCategoryOutput {
-    return {
-      id: category.category_id.id,
-      name: category.name,
-      description: category.description,
-      is_active: category.is_active,
-      parent_category_id: category.parent_category_id?.id || null,
-      tax_rate: category.tax_rate,
-      default_margin_percentage: category.default_margin_percentage,
-      requires_expiry_date: category.requires_expiry_date,
-      display_order: category.display_order,
-      icon_name: category.icon_name,
-      created_at: category.created_at,
-    };
-  }
-} 
+}
