@@ -1,12 +1,12 @@
 import { InMemorySearchableRepository } from '../../../../shared/infra/db/in-memory/in-memory.repository';
 import { Category, CategoryId } from '../../../domain/category.aggregate';
-import { ICategoryRepository, CategorySearchParams, CategorySearchResult } from '../../../domain/repositories/category.repository.interface';
+import { ICategoryRepository, CategoryFilter, CategorySearchParams, CategorySearchResult } from '../../../domain/repositories/category.repository.interface';
 
 export class CategoryInMemoryRepository
   extends InMemorySearchableRepository<
     Category,
     CategoryId,
-    string,
+    CategoryFilter,
     CategorySearchParams,
     CategorySearchResult
   >
@@ -38,19 +38,19 @@ export class CategoryInMemoryRepository
 
   protected async applyFilter(
     items: Category[],
-    filter: string | null,
+    filter: CategoryFilter | null,
   ): Promise<Category[]> {
     if (!filter) {
       return items;
     }
 
     return items.filter((item) => {
-      const searchTerm = filter.toLowerCase();
-      return (
-        item.name.toLowerCase().includes(searchTerm) ||
-        (item.description && item.description.toLowerCase().includes(searchTerm)) ||
-        (item.icon_name && item.icon_name.toLowerCase().includes(searchTerm))
-      );
+      // Filtro por nome (busca parcial, case insensitive)
+      if (filter.name && !item.name.toLowerCase().includes(filter.name.toLowerCase())) {
+        return false;
+      }
+
+      return true;
     });
   }
 
@@ -121,4 +121,4 @@ export class CategoryInMemoryRepository
   getEntity(): new (...args: any[]) => Category {
     return Category;
   }
-} 
+}
