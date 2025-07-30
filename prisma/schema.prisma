@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -39,6 +39,7 @@ model Stores {
   sales          Sale[]
   clients        Client[]
   employees      Employee[]
+  FiscalConfig   FiscalConfig[]
 
   @@map("stores")
 }
@@ -139,6 +140,47 @@ model Category {
   @@map("categories")
 }
 
+// Configurações fiscais por loja/tenant
+model FiscalConfig {
+  fiscal_config_id      String           @id @default(uuid())
+  store_id              String
+  config_name           String // Nome da configuração (ex: "ICMS_PADRAO", "IPI_BEBIDAS")
+  config_type           FiscalConfigType
+  tax_rate              Float? // Alíquota (ex: 18.50 para 18.5%)
+  applies_to_ncm        Json? // Lista de códigos NCM que se aplicam
+  applies_to_categories Json? // IDs de categorias que se aplicam
+  min_value             Float? // Valor mínimo para aplicação
+  max_value             Float? // Valor máximo para aplicação
+  start_date            DateTime? // Data de início da vigência
+  end_date              DateTime? // Data de fim da vigência
+  is_active             Boolean          @default(true)
+  priority              Int              @default(0) // Prioridade para resolução de conflitos
+  description           String?
+  metadata              Json? // Dados adicionais específicos
+  created_at            DateTime         @default(now())
+  updated_at            DateTime         @updatedAt
+
+  // Relacionamentos
+  store Stores @relation(fields: [store_id], references: [store_id])
+
+  @@unique([store_id, config_name])
+  @@index([store_id, config_type])
+  @@index([store_id, is_active])
+  @@map("fiscal_configs")
+}
+
+enum FiscalConfigType {
+  ICMS
+  IPI
+  PIS
+  COFINS
+  ISS
+  CUSTOM
+
+  @@map("fiscal_config_type")
+}
+
+// Atualização do modelo Product para referenciar configurações fiscais
 model Product {
   product_id  String  @id @default(uuid())
   category_id String
@@ -150,14 +192,15 @@ model Product {
   is_active   Boolean @default(true)
 
   // Campos específicos do supermercado
-  brand             String? // Marca do produto
-  unit_type         String  @default("unit") // unit, kg, liter, etc.
-  weight            Float? // Peso em gramas
-  volume            Float? // Volume em ml
-  dimensions        String? // Dimensões (LxAxP)
-  supplier_code     String? // Código do fornecedor
-  ncm_code          String? // Código NCM para fiscal
-  requires_weighing Boolean @default(false) // Produtos pesáveis (açougue)
+  brand                   String? // Marca do produto
+  unit_type               String  @default("unit") // unit, kg, liter, etc.
+  weight                  Float? // Peso em gramas
+  volume                  Float? // Volume em ml
+  dimensions              String? // Dimensões (LxAxP)
+  supplier_code           String? // Código do fornecedor
+  ncm_code                String? // Código NCM para fiscal
+  requires_weighing       Boolean @default(false) // Produtos pesáveis (açougue)
+  fiscal_config_overrides Json? // Sobrescritas específicas do produto
 
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
