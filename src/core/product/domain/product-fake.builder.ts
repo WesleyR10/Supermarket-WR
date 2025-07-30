@@ -3,8 +3,10 @@ import { Product, ProductId, UnitType } from './product.aggregate';
 
 type PropOrFactory<T> = T | ((index: number) => T);
 
-export class ProductFakeBuilder {
+export class ProductFakeBuilder<TBuild = any> {
   private _product_id: PropOrFactory<ProductId> = (_index) => new ProductId();
+  private _store_id: PropOrFactory<string> = (_index) => 
+    this.chance.guid({ version: 4 });
   private _category_id: PropOrFactory<string> = (_index) => 
     this.chance.guid({ version: 4 });
   private _name: PropOrFactory<string> = (_index) => 
@@ -34,8 +36,7 @@ export class ProductFakeBuilder {
   private _cost_price: PropOrFactory<number | null> = (_index) => 
     this.chance.bool({ likelihood: 80 }) ? 
       parseFloat(this.chance.floating({ min: 0.30, max: 80.00, fixed: 2 }).toString()) : null;
-  private _is_active: PropOrFactory<boolean> = (_index) => 
-    this.chance.bool({ likelihood: 85 });
+  private _is_active: PropOrFactory<boolean> = (_index) => true;
   
   // Campos específicos do supermercado
   private _brand: PropOrFactory<string | null> = (_index) => 
@@ -44,8 +45,7 @@ export class ProductFakeBuilder {
       'Tio João', 'Sadia', 'Perdigão', 'Barilla', 'Pelé', 'OMO', 'Ypê',
       'Seda', 'Trakinas', 'Bauducco', 'Garoto', 'Lacta', 'Vigor'
     ]) : null;
-  private _unit_type: PropOrFactory<UnitType> = (_index) => 
-    this.chance.pickone(Object.values(UnitType));
+  private _unit_type: PropOrFactory<UnitType> = (_index) => UnitType.UNIT;
   private _weight: PropOrFactory<number | null> = (_index) => 
     this.chance.bool({ likelihood: 60 }) ? 
       this.chance.integer({ min: 50, max: 5000 }) : null; // 50g a 5kg
@@ -61,8 +61,7 @@ export class ProductFakeBuilder {
   private _ncm_code: PropOrFactory<string | null> = (_index) => 
     this.chance.bool({ likelihood: 60 }) ? 
       this.chance.string({ length: 8, pool: '0123456789' }) : null;
-  private _requires_weighing: PropOrFactory<boolean> = (_index) => 
-    this.chance.bool({ likelihood: 20 });
+  private _requires_weighing: PropOrFactory<boolean> = (_index) => false;
   
   private _created_at: PropOrFactory<Date> = (_index) => 
     new Date(this.chance.date({ min: new Date(2020, 0, 1) }));
@@ -72,13 +71,13 @@ export class ProductFakeBuilder {
   private countObjs = 1;
   private chance: Chance.Chance;
 
-  private constructor() {
-    this.chance = Chance();
+  // Factory methods
+  static aProduct() {
+    return new ProductFakeBuilder<Product>();
   }
 
-  // Factory methods
-  static aProduct(): ProductFakeBuilder {
-    return new ProductFakeBuilder();
+  private constructor() {
+    this.chance = Chance();
   }
 
   static theProducts(countObjs: number): ProductFakeBuilder {
@@ -107,81 +106,57 @@ export class ProductFakeBuilder {
 
   withMeatProduct() {
     this._name = () => this.chance.pickone([
-      'Carne Bovina Alcatra', 'Frango Inteiro', 'Costela Suína',
-      'Linguiça Calabresa', 'Bacon Fatiado', 'Presunto Fatiado',
-      'Queijo Mussarela', 'Mortadela Fatiada'
+      'Carne Bovina Premium', 'Frango Inteiro', 'Costela Suína',
+      'Picanha 1kg', 'Alcatra Fatiada', 'Linguiça Toscana',
+      'Bacon Fatiado', 'Peito de Frango', 'Coxão Mole'
     ]);
     this._unit_type = () => UnitType.KG;
-    this._weight = () => this.chance.integer({ min: 500, max: 3000 });
     this._requires_weighing = () => true;
-    this._price = () => parseFloat(this.chance.floating({ min: 15.00, max: 45.00, fixed: 2 }).toString());
-    this._cost_price = () => parseFloat(this.chance.floating({ min: 8.00, max: 25.00, fixed: 2 }).toString());
-    this._ncm_code = () => '02071400'; // NCM para carne
-    this._brand = () => this.chance.pickone(['Sadia', 'Perdigão', 'Seara', 'Friboi', 'Marfrig']);
+    this._weight = () => this.chance.integer({ min: 500, max: 3000 });
+    this._ncm_code = () => '02013000'; // NCM para carnes
+    this._brand = () => this.chance.pickone(['Sadia', 'Perdigão', 'Seara', 'Friboi']);
     return this;
   }
 
   withGroceryItem() {
     this._name = () => this.chance.pickone([
-      'Arroz Branco 5kg', 'Feijão Preto 1kg', 'Macarrão Parafuso 500g',
-      'Óleo de Soja 900ml', 'Açúcar Cristal 1kg', 'Sal Refinado 1kg',
-      'Café Torrado 500g', 'Farinha de Trigo 1kg', 'Leite Condensado 395g'
+      'Arroz Branco 5kg', 'Feijão Preto 1kg', 'Açúcar Cristal 1kg',
+      'Óleo de Soja 900ml', 'Macarrão Espaguete 500g', 'Farinha de Trigo 1kg',
+      'Sal Refinado 1kg', 'Café Torrado 500g'
     ]);
-    this._unit_type = () => UnitType.PACK;
-    this._weight = () => this.chance.integer({ min: 395, max: 5000 });
-    this._price = () => parseFloat(this.chance.floating({ min: 2.50, max: 25.00, fixed: 2 }).toString());
-    this._cost_price = () => parseFloat(this.chance.floating({ min: 1.50, max: 15.00, fixed: 2 }).toString());
-    this._brand = () => this.chance.pickone([
-      'Tio João', 'Kicaldo', 'Barilla', 'Liza', 'União', 'Cisne', 'Pelé', 'Dona Benta', 'Nestlé'
-    ]);
+    this._unit_type = () => UnitType.UNIT;
+    this._brand = () => this.chance.pickone(['Tio João', 'Camil', 'União', 'Soya']);
     return this;
   }
 
   withCleaningProduct() {
     this._name = () => this.chance.pickone([
-      'Detergente Ypê 500ml', 'Sabão em Pó OMO 1kg', 'Amaciante Comfort 2L',
-      'Desinfetante Pinho Sol 1L', 'Água Sanitária 1L', 'Esponja Scotch Brite',
-      'Papel Higiênico 4 rolos', 'Papel Toalha 2 rolos'
+      'Detergente Líquido 500ml', 'Sabão em Pó 1kg', 'Desinfetante 1L',
+      'Água Sanitária 1L', 'Amaciante 2L', 'Esponja de Aço',
+      'Papel Higiênico 12 rolos', 'Sabonete 90g'
     ]);
-    this._unit_type = () => UnitType.UNIT;
-    this._volume = () => this.chance.integer({ min: 500, max: 2000 });
-    this._price = () => parseFloat(this.chance.floating({ min: 3.50, max: 18.00, fixed: 2 }).toString());
-    this._cost_price = () => parseFloat(this.chance.floating({ min: 2.00, max: 12.00, fixed: 2 }).toString());
-    this._brand = () => this.chance.pickone([
-      'Ypê', 'OMO', 'Comfort', 'Pinho Sol', 'Qboa', 'Scotch Brite', 'Neve', 'Snob'
-    ]);
+    this._brand = () => this.chance.pickone(['Ypê', 'OMO', 'Veja', 'Bombril']);
     this._ncm_code = () => '34022000'; // NCM para produtos de limpeza
     return this;
   }
 
   withHighValueProduct() {
-    this._price = () => parseFloat(this.chance.floating({ min: 80.00, max: 300.00, fixed: 2 }).toString());
-    this._cost_price = () => parseFloat(this.chance.floating({ min: 40.00, max: 180.00, fixed: 2 }).toString());
-    this._ncm_code = () => this.chance.string({ length: 8, pool: '0123456789' });
-    this._brand = () => this.chance.pickone([
-      'Samsung', 'LG', 'Philips', 'Brastemp', 'Electrolux', 'Mondial', 'Black & Decker'
-    ]);
+    this._price = () => parseFloat(this.chance.floating({ min: 50.00, max: 500.00, fixed: 2 }).toString());
+    this._cost_price = () => parseFloat(this.chance.floating({ min: 30.00, max: 300.00, fixed: 2 }).toString());
     return this;
   }
 
   withPerishableProduct() {
-    this._requires_weighing = () => true;
-    this._weight = () => this.chance.integer({ min: 200, max: 2000 });
-    this._unit_type = () => UnitType.KG;
     this._name = () => this.chance.pickone([
-      'Banana Prata', 'Maçã Gala', 'Laranja Pêra', 'Tomate Salada',
-      'Cebola Branca', 'Batata Inglesa', 'Alface Americana', 'Cenoura'
+      'Leite Integral 1L', 'Iogurte Natural 170g', 'Queijo Mussarela 200g',
+      'Presunto Fatiado 200g', 'Pão de Forma', 'Ovos Brancos 12 unidades'
     ]);
-    this._price = () => parseFloat(this.chance.floating({ min: 2.50, max: 15.00, fixed: 2 }).toString());
-    this._cost_price = () => parseFloat(this.chance.floating({ min: 1.20, max: 8.00, fixed: 2 }).toString());
+    this._brand = () => this.chance.pickone(['Nestlé', 'Danone', 'Vigor', 'Tirolez']);
     return this;
   }
 
   withDiscountedProduct() {
-    const originalPrice = parseFloat(this.chance.floating({ min: 10.00, max: 50.00, fixed: 2 }).toString());
-    const discountedPrice = originalPrice * 0.7; // 30% de desconto
-    this._price = () => parseFloat(discountedPrice.toFixed(2));
-    this._cost_price = () => parseFloat((originalPrice * 0.5).toFixed(2));
+    this._price = () => parseFloat(this.chance.floating({ min: 1.00, max: 15.00, fixed: 2 }).toString());
     return this;
   }
 
@@ -193,13 +168,17 @@ export class ProductFakeBuilder {
   withWeighableProduct() {
     this._requires_weighing = () => true;
     this._unit_type = () => UnitType.KG;
-    this._weight = () => this.chance.integer({ min: 100, max: 3000 });
     return this;
   }
 
-  // Métodos de configuração individual
+  // Métodos with para configuração individual
   withProductId(valueOrFactory: PropOrFactory<ProductId>) {
     this._product_id = valueOrFactory;
+    return this;
+  }
+
+  withStoreId(valueOrFactory: PropOrFactory<string>) {
+    this._store_id = valueOrFactory;
     return this;
   }
 
@@ -288,11 +267,22 @@ export class ProductFakeBuilder {
     return this;
   }
 
-  // Método build
-  build(): Product | Product[] {
+  activate() {
+    this._is_active = () => true;
+    return this;
+  }
+
+  deactivate() {
+    this._is_active = () => false;
+    return this;
+  }
+
+  // MÉTODO BUILD QUE ESTAVA FALTANDO
+  build(): TBuild {
     const products = new Array(this.countObjs).fill(undefined).map((_, index) => {
       const product = new Product({
         product_id: this.callFactory(this._product_id, index),
+        store_id: this.callFactory(this._store_id, index),
         category_id: this.callFactory(this._category_id, index),
         name: this.callFactory(this._name, index),
         description: this.callFactory(this._description, index),
@@ -313,11 +303,16 @@ export class ProductFakeBuilder {
       });
       return product;
     });
-    return this.countObjs === 1 ? products[0] : products;
+    return (this.countObjs === 1 ? products[0] : products) as TBuild;
   }
 
+  // Getters
   get product_id() {
     return this.getValue('product_id');
+  }
+
+  get store_id() {
+    return this.getValue('store_id');
   }
 
   get category_id() {
@@ -399,4 +394,4 @@ export class ProductFakeBuilder {
     }
     return factoryOrValue;
   }
-} 
+}

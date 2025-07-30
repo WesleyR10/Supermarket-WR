@@ -11,6 +11,7 @@ import { UnitType } from '../../../domain/product.aggregate';
 
 export type UpdateProductInputConstructorProps = {
   id: string;
+  store_id: string; // ADICIONADO
   name?: string;
   description?: string | null;
   barcode?: string;
@@ -31,6 +32,10 @@ export class UpdateProductInput {
   @IsString()
   @IsNotEmpty()
   id: string;
+
+  @IsString() // ADICIONADO
+  @IsNotEmpty()
+  store_id: string;
 
   @IsString()
   @IsOptional()
@@ -91,20 +96,21 @@ export class UpdateProductInput {
   constructor(props?: UpdateProductInputConstructorProps) {
     if (!props) return;
     this.id = props.id;
-    props.name !== undefined && (this.name = props.name);
-    props.description !== undefined && (this.description = props.description);
-    props.barcode !== undefined && (this.barcode = props.barcode);
-    props.price !== undefined && (this.price = props.price);
-    props.cost_price !== undefined && (this.cost_price = props.cost_price);
-    props.is_active !== undefined && (this.is_active = props.is_active);
-    props.brand !== undefined && (this.brand = props.brand);
-    props.unit_type !== undefined && (this.unit_type = props.unit_type);
-    props.weight !== undefined && (this.weight = props.weight);
-    props.volume !== undefined && (this.volume = props.volume);
-    props.dimensions !== undefined && (this.dimensions = props.dimensions);
-    props.supplier_code !== undefined && (this.supplier_code = props.supplier_code);
-    props.ncm_code !== undefined && (this.ncm_code = props.ncm_code);
-    props.requires_weighing !== undefined && (this.requires_weighing = props.requires_weighing);
+    this.store_id = props.store_id; // ADICIONADO
+    this.name = props.name;
+    this.description = props.description;
+    this.barcode = props.barcode;
+    this.price = props.price;
+    this.cost_price = props.cost_price;
+    this.is_active = props.is_active;
+    this.brand = props.brand;
+    this.unit_type = props.unit_type;
+    this.weight = props.weight;
+    this.volume = props.volume;
+    this.dimensions = props.dimensions;
+    this.supplier_code = props.supplier_code;
+    this.ncm_code = props.ncm_code;
+    this.requires_weighing = props.requires_weighing;
   }
 }
 

@@ -2,6 +2,8 @@ import { IUseCase } from '../../../../shared/application/use-case.interface';
 import { EntityValidationError } from '../../../../shared/domain/validators/validation.error';
 import { Product } from '../../../domain/product.aggregate';
 import { IProductRepository } from '../../../domain/repositories/product.repository.interface';
+import { IFiscalValidationDomainService } from '../../../domain/services/fiscal-validation.domain-service';
+import { IStoreSettingsService } from '../../../../shared/domain/services/store-settings.service';
 import {
   ProductOutput,
   ProductOutputMapper,
@@ -11,34 +13,42 @@ import { CreateProductInput } from './create-product.input';
 export class CreateProductUseCase
   implements IUseCase<CreateProductInput, CreateProductOutput>
 {
-  constructor(private productRepo: IProductRepository) {}
+  constructor(
+    private readonly productRepo: IProductRepository,
+    private readonly fiscalValidationService: IFiscalValidationDomainService,
+    private readonly storeSettingsService: IStoreSettingsService
+  ) {}
 
   async execute(input: CreateProductInput): Promise<CreateProductOutput> {
-    const product = Product.create({
-      category_id: input.category_id,
-      name: input.name,
-      description: input.description,
-      barcode: input.barcode,
-      price: input.price,
-      cost_price: input.cost_price,
-      is_active: input.is_active,
-      brand: input.brand,
-      unit_type: input.unit_type,
-      weight: input.weight,
-      volume: input.volume,
-      dimensions: input.dimensions,
-      supplier_code: input.supplier_code,
-      ncm_code: input.ncm_code,
-      requires_weighing: input.requires_weighing,
-    });
+    const entity = Product.create(input);
 
-    if (product.notification.hasErrors()) {
-      throw new EntityValidationError(product.notification.toJSON());
+    if (entity.notification.hasErrors()) {
+      throw new EntityValidationError(entity.notification.toJSON());
     }
 
-    await this.productRepo.insert(product);
+    // Verificar se a validação fiscal está habilitada para esta loja
+    const isFiscalValidationEnabled = await this.storeSettingsService.isFiscalValidationEnabled(input.store_id);
+    
+    if (isFiscalValidationEnabled) {
+      // Executar validação fiscal
+      const fiscalValidation = await this.fiscalValidationService.validateFiscalCompliance(
+        entity,
+        input.store_id
+      );
 
-    return ProductOutputMapper.toOutput(product);
+      if (!fiscalValidation.isValid) {
+        // Adicionar erros de validação fiscal às notificações da entidade
+        fiscalValidation.errors.forEach(error => {
+          entity.notification.addError(error, 'fiscal_validation');
+        });
+        
+        throw new EntityValidationError(entity.notification.toJSON());
+      }
+    }
+
+    await this.productRepo.insert(entity);
+
+    return ProductOutputMapper.toOutput(entity);
   }
 }
 

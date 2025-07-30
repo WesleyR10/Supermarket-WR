@@ -1,5 +1,5 @@
 import { ISearchableRepository } from '../../../shared/domain/repository/repository-interface';
-import { SearchParams } from '../../../shared/domain/repository/search-params';
+import { SearchParams, SearchParamsConstructorProps } from '../../../shared/domain/repository/search-params';
 import { SearchResult } from '../../../shared/domain/repository/search-result';
 import { Product, ProductId, UnitType } from '../product.aggregate';
 
@@ -17,8 +17,34 @@ export type ProductFilter = {
 };
 
 export class ProductSearchParams extends SearchParams<ProductFilter> {
-  constructor(props: SearchParams<ProductFilter>) {
-    super(props);
+  static create(props: SearchParamsConstructorProps<ProductFilter> = {}): ProductSearchParams {
+    return new ProductSearchParams(props);
+  }
+
+  get filter(): ProductFilter | null {
+    return this._filter;
+  }
+
+  protected set filter(value: ProductFilter | null) {
+    const _value =
+      !value || (value as unknown) === '' || typeof value !== 'object'
+        ? null
+        : value;
+
+    const filter = {
+      ...(_value && _value.name && { name: `${_value.name}` }),
+      ...(_value && _value.category_id && { category_id: `${_value.category_id}` }),
+      ...(_value && _value.brand && { brand: `${_value.brand}` }),
+      ...(_value && _value.barcode && { barcode: `${_value.barcode}` }),
+      ...(_value && _value.unit_type && { unit_type: _value.unit_type }),
+      ...(_value && _value.is_active !== undefined && { is_active: _value.is_active }),
+      ...(_value && _value.requires_weighing !== undefined && { requires_weighing: _value.requires_weighing }),
+      ...(_value && _value.has_stock !== undefined && { has_stock: _value.has_stock }),
+      ...(_value && _value.price_min !== undefined && { price_min: _value.price_min }),
+      ...(_value && _value.price_max !== undefined && { price_max: _value.price_max }),
+    };
+
+    this._filter = Object.keys(filter).length === 0 ? null : filter;
   }
 }
 
@@ -120,4 +146,4 @@ export interface IProductRepository extends ISearchableRepository<
   
   // Produtos com problemas de compliance
   findComplianceIssues(): Promise<Product[]>;
-} 
+}

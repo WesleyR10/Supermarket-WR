@@ -3,9 +3,7 @@ import {
   PaginationOutputMapper,
 } from '../../../../shared/application/pagination-output';
 import { IUseCase } from '../../../../shared/application/use-case.interface';
-import { SortDirection } from '../../../../shared/domain/repository/search-params';
 import {
-  ProductFilter,
   ProductSearchParams,
   ProductSearchResult,
   IProductRepository,
@@ -14,6 +12,7 @@ import {
   ProductOutput,
   ProductOutputMapper,
 } from '../common/product-output';
+import { ListProductsInput } from './list-products.input';
 
 export class ListProductsUseCase
   implements IUseCase<ListProductsInput, ListProductsOutput>
@@ -21,7 +20,7 @@ export class ListProductsUseCase
   constructor(private productRepo: IProductRepository) {}
 
   async execute(input: ListProductsInput): Promise<ListProductsOutput> {
-    const params = new ProductSearchParams(input);
+    const params = ProductSearchParams.create(input);
     const searchResult = await this.productRepo.search(params);
     return this.toOutput(searchResult);
   }
@@ -34,13 +33,5 @@ export class ListProductsUseCase
     return PaginationOutputMapper.toOutput(items, searchResult);
   }
 }
-
-export type ListProductsInput = {
-  page?: number;
-  per_page?: number;
-  sort?: string | null;
-  sort_dir?: SortDirection | null;
-  filter?: ProductFilter | null;
-};
 
 export type ListProductsOutput = PaginationOutput<ProductOutput>;

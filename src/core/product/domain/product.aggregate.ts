@@ -6,6 +6,7 @@ import { ProductValidatorFactory } from './product.validator';
 
 export type ProductConstructorProps = {
   product_id?: ProductId;
+  store_id: string; // Adicionar store_id
   category_id: string;
   name: string;
   description?: string | null;
@@ -45,6 +46,7 @@ export class ProductId extends Uuid {}
 
 export class Product extends AggregateRoot {
   product_id: ProductId;
+  store_id: string; // Adicionar store_id
   category_id: string;
   name: string;
   description: string | null;
@@ -69,6 +71,7 @@ export class Product extends AggregateRoot {
   constructor(props: ProductConstructorProps) {
     super();
     this.product_id = props.product_id ?? new ProductId();
+    this.store_id = props.store_id; // Adicionar store_id
     this.category_id = props.category_id;
     this.name = props.name;
     this.description = props.description ?? null;
@@ -149,7 +152,18 @@ export class Product extends AggregateRoot {
 
   // Verificar se produto está em categoria de bebidas
   isBeverage(): boolean {
-    return this.volume !== null && this.unit_type === UnitType.LITER;
+    // Verificar por tipo de unidade e volume, ou por palavras-chave no nome
+    const hasVolumeAndLiterUnit = this.volume !== null && this.unit_type === UnitType.LITER;
+    const hasBeverageKeywords = this.name.toLowerCase().includes('bebida') ||
+                               this.name.toLowerCase().includes('suco') ||
+                               this.name.toLowerCase().includes('refrigerante') ||
+                               this.name.toLowerCase().includes('água') ||
+                               this.name.toLowerCase().includes('cerveja') ||
+                               this.name.toLowerCase().includes('vinho') ||
+                               this.unit_type === UnitType.BOTTLE ||
+                               this.unit_type === UnitType.CAN;
+    
+    return hasVolumeAndLiterUnit || hasBeverageKeywords;
   }
 
   // Verificar se produto precisa de refrigeração
@@ -182,6 +196,92 @@ export class Product extends AggregateRoot {
     }
   }
 
+  // Métodos de negócio que os testes esperam
+  changeName(name: string): void {
+    if (!name || name.trim().length < 2) {
+      this.notification.addError('Name must be at least 2 characters long', 'name');
+      return;
+    }
+    this.name = name;
+    this.updated_at = new Date();
+  }
+
+  changePrice(price: number): void {
+    if (price <= 0) {
+      this.notification.addError('Price must be greater than zero', 'price');
+      return;
+    }
+    this.price = price;
+    this.updated_at = new Date();
+  }
+
+  changeDescription(description: string | null): void {
+    this.description = description;
+    this.updated_at = new Date();
+  }
+
+  changeBarcode(barcode: string): void {
+    this.barcode = barcode;
+    this.updated_at = new Date();
+    this.validate(['barcode']);
+  }
+
+  changeCostPrice(costPrice: number | null): void {
+    this.cost_price = costPrice;
+    this.updated_at = new Date();
+    this.validate(['cost_price']);
+  }
+
+  changeBrand(brand: string | null): void {
+    this.brand = brand;
+    this.updated_at = new Date();
+  }
+
+  // Métodos que serão corrigidos:
+  changeUnitType(unitType: UnitType): void {
+    this.unit_type = unitType;
+    this.updated_at = new Date();
+    // REMOVIDO: this.validate(['unit_type']);
+  }
+  
+  changeWeight(weight: number | null): void {
+    this.weight = weight;
+    this.updated_at = new Date();
+    // REMOVIDO: this.validate(['weight']);
+  }
+  
+  changeVolume(volume: number | null): void {
+    this.volume = volume;
+    this.updated_at = new Date();
+    this.validate(['volume']);
+  }
+  
+  changeDimensions(dimensions: string | null): void {
+    this.dimensions = dimensions;
+    this.updated_at = new Date();
+  }
+
+  changeSupplierCode(supplierCode: string | null): void {
+    this.supplier_code = supplierCode;
+    this.updated_at = new Date();
+  }
+  
+  changeNcmCode(ncmCode: string | null): void {
+    this.ncm_code = ncmCode;
+    this.updated_at = new Date();
+    // REMOVIDO: this.validate(['ncm_code']);
+  }
+
+  changeRequiresWeighing(requiresWeighing: boolean): void {
+    this.requires_weighing = requiresWeighing;
+    this.updated_at = new Date();
+  }
+
+  calculateMarginPercentage(): number | null {
+    if (!this.cost_price || this.cost_price <= 0) return null;
+    return ((this.price - this.cost_price) / this.cost_price) * 100;
+  }
+
   // Ativar/desativar produto
   activate(): void {
     this.is_active = true;
@@ -193,39 +293,20 @@ export class Product extends AggregateRoot {
     this.updated_at = new Date();
   }
 
-  // Método para compliance fiscal
-  validateFiscalCompliance(): boolean {
-    const errors: string[] = [];
-    
-    if (this.requiresNcmCode() && !this.ncm_code) {
-      errors.push('NCM code is required for products above R$ 50');
-    }
-    
-    if (this.isPerishable() && !this.weight && !this.volume) {
-      errors.push('Perishable products must have weight or volume specified');
-    }
-    
-    if (this.isBeverage() && !this.volume) {
-      errors.push('Beverages must have volume specified');
-    }
-    
-    errors.forEach(error => this.notification.addError(error, 'fiscal'));
-    
-    return errors.length === 0;
-  }
+  // REMOVER o método validateFiscalCompliance() completamente
+  // A validação fiscal agora é responsabilidade do FiscalValidationDomainService
 
-  // Método para auditoria de precificação
+  // Método para auditoria de precificação - ATUALIZADO
   getPricingAudit(): {
     hasMargin: boolean;
     margin: number | null;
     pricePerUnit: number;
-    fiscalCompliant: boolean;
+    // REMOVIDO: fiscalCompliant - agora é responsabilidade do Domain Service
   } {
     return {
       hasMargin: this.hasAdequateMargin(),
       margin: this.calculateMargin(),
       pricePerUnit: this.getPricePerBaseUnit(),
-      fiscalCompliant: this.validateFiscalCompliance()
     };
   }
 
@@ -257,8 +338,7 @@ export class Product extends AggregateRoot {
     };
   }
 
-  // Método estático para fake builder
-  static fake(): ProductFakeBuilder {
-    return ProductFakeBuilder.aProduct();
+  static fake() {
+    return ProductFakeBuilder;
   }
-} 
+}

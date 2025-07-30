@@ -5,11 +5,13 @@ import {
   IsOptional,
   IsString,
   IsEnum,
+  IsUUID,
   validateSync,
 } from 'class-validator';
 import { UnitType } from '../../../domain/product.aggregate';
 
 export type CreateProductInputConstructorProps = {
+  store_id: string;
   category_id: string;
   name: string;
   barcode: string;
@@ -28,6 +30,10 @@ export type CreateProductInputConstructorProps = {
 };
 
 export class CreateProductInput {
+  @IsUUID()
+  @IsNotEmpty()
+  store_id: string;
+
   @IsString()
   @IsNotEmpty()
   category_id: string;
@@ -89,6 +95,7 @@ export class CreateProductInput {
 
   constructor(props?: CreateProductInputConstructorProps) {
     if (!props) return;
+    this.store_id = props.store_id; 
     this.category_id = props.category_id;
     this.name = props.name;
     this.description = props.description;
