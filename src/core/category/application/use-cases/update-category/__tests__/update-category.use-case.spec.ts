@@ -3,6 +3,7 @@ import { UpdateCategoryUseCase } from '../update-category.use-case';
 import { Category, CategoryId } from '../../../../domain/category.aggregate';
 import { UpdateCategoryInput } from '../update-category.input';
 import { NotFoundError } from '../../../../../shared/domain/errors/not-found.error';
+import { EntityValidationError } from '@core/shared/domain/validators/validation.error';
 
 describe('UpdateCategoryUseCase Unit Tests', () => {
   let useCase: UpdateCategoryUseCase;
@@ -18,6 +19,7 @@ describe('UpdateCategoryUseCase Unit Tests', () => {
     const input: UpdateCategoryInput = {
       id: categoryId.id,
       name: 'Updated Category',
+      store_id: 'store-123',
     };
 
     await expect(() => useCase.execute(input)).rejects.toThrow(
@@ -43,6 +45,7 @@ describe('UpdateCategoryUseCase Unit Tests', () => {
       requires_expiry_date: true,
       display_order: 5,
       icon_name: 'updated-icon',
+      store_id: 'store-123',
     };
 
     const output = await useCase.execute(input);
@@ -76,6 +79,7 @@ describe('UpdateCategoryUseCase Unit Tests', () => {
     const input: UpdateCategoryInput = {
       id: category.category_id.id,
       name: 'Updated Name Only',
+      store_id: 'store-123',
     };
 
     const output = await useCase.execute(input);
@@ -83,5 +87,22 @@ describe('UpdateCategoryUseCase Unit Tests', () => {
     expect(output.name).toBe('Updated Name Only');
     expect(output.description).toBe('Original description');
     expect(output.tax_rate).toBe(10.0);
+  });
+
+  it('should throw error when updating category from another store', async () => {
+    const category = Category.create({ store_id: 'store1', name: 'Test' });
+    await repository.insert(category);
+    const input = { id: category.category_id.id, name: 'Updated', store_id: 'store2' };
+    try {
+      await useCase.execute(input);
+      fail('should have thrown');
+    } catch (e) {
+      expect(e).toBeInstanceOf(EntityValidationError);
+      expect(e.error).toEqual([
+        {
+          store_id: ['Category does not belong to this store'],
+        },
+      ]);
+    }
   });
 });

@@ -1,9 +1,13 @@
-import { MaxLength, MinLength, Min, Max, Matches } from 'class-validator';
+import { MaxLength, MinLength, Min, Max, Matches, IsNotEmpty, IsString } from 'class-validator';
 import { Category } from './category.aggregate';
 import { ClassValidatorFields } from '../../shared/domain/validators/class-validator-fields';
 import { Notification } from '../../shared/domain/validators/notification';
 
 export class CategoryRules {
+  @IsNotEmpty({ groups: ['store_id'] })
+  @IsString({ groups: ['store_id'] })
+  store_id: string;
+
   @MinLength(2, { groups: ['name'] })
   @MaxLength(100, { groups: ['name'] })
   name: string;
@@ -33,6 +37,7 @@ export class CategoryRules {
 export class CategoryValidator extends ClassValidatorFields {
   validate(notification: Notification, data: any, fields?: string[]): boolean {
     const newFields = fields?.length ? fields : [
+      'store_id', // Sempre validar store_id para garantir multi-tenancy
       'name',
       'description',
       'tax_rate',
@@ -49,4 +54,4 @@ export class CategoryValidatorFactory {
   static create(): CategoryValidator {
     return new CategoryValidator();
   }
-} 
+}

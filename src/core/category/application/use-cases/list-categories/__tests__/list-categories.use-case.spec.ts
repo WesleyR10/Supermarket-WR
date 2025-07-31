@@ -19,7 +19,7 @@ describe('ListCategoriesUseCase Unit Tests', () => {
     
     await repository.bulkInsert(categories);
 
-    const output = await useCase.execute({});
+    const output = await useCase.execute({ filter: { store_id: 'store-123' } });
 
     expect(output.items).toHaveLength(2);
     expect(output.total).toBe(2);
@@ -37,7 +37,7 @@ describe('ListCategoriesUseCase Unit Tests', () => {
     
     await repository.bulkInsert(categories);
 
-    const output = await useCase.execute({ filter: { name: 'Bebidas' } });
+    const output = await useCase.execute({ filter: { name: 'Bebidas', store_id: 'store-123' } });
 
     expect(output.items).toHaveLength(2);
     expect(output.items[0].name).toContain('Bebidas');
@@ -51,7 +51,7 @@ describe('ListCategoriesUseCase Unit Tests', () => {
     
     await repository.bulkInsert(categories);
 
-    const output = await useCase.execute({ page: 2, per_page: 10 });
+    const output = await useCase.execute({ page: 2, per_page: 10, filter: { store_id: 'store-123' } });
 
     expect(output.items).toHaveLength(10);
     expect(output.current_page).toBe(2);
@@ -69,10 +69,22 @@ describe('ListCategoriesUseCase Unit Tests', () => {
     
     await repository.bulkInsert(categories);
 
-    const output = await useCase.execute({ sort: 'name', sort_dir: 'asc' });
+    const output = await useCase.execute({ sort: 'name', sort_dir: 'asc', filter: { store_id: 'store-123' } });
 
     expect(output.items[0].name).toBe('Alpha');
     expect(output.items[1].name).toBe('Beta');
     expect(output.items[2].name).toBe('Zebra');
+  });
+
+  // Testa listagem isolada por store_id (multi-tenancy)
+  it('should list only categories from specified store', async () => {
+    const categories = [
+      Category.create({ store_id: 'store1', name: 'Cat1' }),
+      Category.create({ store_id: 'store2', name: 'Cat2' }),
+    ];
+    await repository.bulkInsert(categories);
+    const output = await useCase.execute({ filter: { store_id: 'store1' } });
+    expect(output.items).toHaveLength(1);
+    expect(output.items[0].store_id).toBe('store1');
   });
 });

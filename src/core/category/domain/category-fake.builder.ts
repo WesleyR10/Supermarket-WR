@@ -29,6 +29,16 @@ export class CategoryFakeBuilder<TBuild = any> {
     return new CategoryFakeBuilder<Category[]>(countObjs);
   }
 
+  // Método específico para multi-tenancy - criar categorias para uma loja específica
+  static categoriesForStore(storeId: string, countObjs: number = 5) {
+    return new CategoryFakeBuilder<Category[]>(countObjs).withStoreId(storeId);
+  }
+
+  // Método para criar categorias de diferentes lojas (para testes de isolamento)
+  static categoriesFromDifferentStores(countObjs: number = 10) {
+    return new CategoryFakeBuilder<Category[]>(countObjs).withRandomStoreIds();
+  }
+
   private constructor(countObjs: number = 1) {
     this.countObjs = countObjs;
     this.chance = Chance();
@@ -41,6 +51,18 @@ export class CategoryFakeBuilder<TBuild = any> {
 
   withStoreId(valueOrFactory: PropOrFactory<string>) {
     this._store_id = valueOrFactory;
+    return this;
+  }
+
+  // Método para gerar store_ids aleatórios (útil para testes de isolamento)
+  withRandomStoreIds() {
+    this._store_id = (_index) => this.chance.guid();
+    return this;
+  }
+
+  // Método para criar categorias com store_id específico (útil para testes)
+  forStore(storeId: string) {
+    this._store_id = storeId;
     return this;
   }
 
@@ -110,16 +132,16 @@ export class CategoryFakeBuilder<TBuild = any> {
   }
 
   withInvalidTaxRate(value?: number) {
-    this._tax_rate = value ?? -1;
+    this._tax_rate = value ?? this.chance.floating({ min: 101, max: 200 });
     return this;
   }
 
   withInvalidMarginPercentage(value?: number) {
-    this._default_margin_percentage = value ?? -1;
+    this._default_margin_percentage = value ?? this.chance.floating({ min: 501, max: 1000 });
     return this;
   }
 
-  // Métodos específicos para hierarquia de categorias
+  // Método para criar categoria raiz (sem parent)
   asRootCategory() {
     this._parent_category_id = null;
     return this;
@@ -130,84 +152,81 @@ export class CategoryFakeBuilder<TBuild = any> {
     return this;
   }
 
-  // Métodos específicos para supermercado
-  withSupermarketCategory(categoryType: 'food' | 'beverage' | 'cleaning' | 'personal_care' | 'electronics') {
-    const categories = {
-      food: { 
-        name: 'Alimentos', 
-        description: 'Produtos alimentícios e perecíveis',
-        tax_rate: 7.0,
-        margin: 25.0,
-        expiry: true,
-        icon: 'food-icon'
-      },
-      beverage: { 
-        name: 'Bebidas', 
-        description: 'Refrigerantes, sucos, águas e bebidas alcoólicas',
-        tax_rate: 18.0,
-        margin: 30.0,
-        expiry: true,
-        icon: 'beverage-icon'
-      },
-      cleaning: { 
-        name: 'Limpeza', 
-        description: 'Produtos de limpeza e higiene doméstica',
-        tax_rate: 18.0,
-        margin: 35.0,
-        expiry: false,
-        icon: 'cleaning-icon'
-      },
-      personal_care: { 
-        name: 'Higiene Pessoal', 
-        description: 'Produtos de cuidados pessoais e beleza',
-        tax_rate: 18.0,
-        margin: 40.0,
-        expiry: false,
-        icon: 'personal-care-icon'
-      },
-      electronics: { 
-        name: 'Eletrônicos', 
-        description: 'Produtos eletrônicos e eletrodomésticos',
-        tax_rate: 25.0,
-        margin: 20.0,
-        expiry: false,
-        icon: 'electronics-icon'
-      }
-    };
-    
-    const category = categories[categoryType];
-    this._name = category.name;
-    this._description = category.description;
-    this._tax_rate = category.tax_rate;
-    this._default_margin_percentage = category.margin;
-    this._requires_expiry_date = category.expiry;
-    this._icon_name = category.icon;
+  // Método para criar categorias específicas do supermercado com store_id
+  withSupermarketCategory(categoryType: 'food' | 'beverage' | 'cleaning' | 'personal_care' | 'electronics', storeId?: string) {
+    if (storeId) {
+      this._store_id = storeId;
+    }
+
+    switch (categoryType) {
+      case 'food':
+        this._name = () => this.chance.pickone([
+          'Frutas e Verduras', 'Carnes e Aves', 'Laticínios', 'Padaria', 'Congelados',
+          'Grãos e Cereais', 'Conservas', 'Temperos e Condimentos'
+        ]);
+        this._requires_expiry_date = true;
+        this._tax_rate = () => this.chance.floating({ min: 0, max: 7, fixed: 2 });
+        this._icon_name = () => this.chance.pickone(['apple', 'meat', 'milk', 'bread']);
+        break;
+      case 'beverage':
+        this._name = () => this.chance.pickone([
+          'Refrigerantes', 'Sucos', 'Águas', 'Bebidas Alcoólicas', 'Energéticos',
+          'Chás e Cafés', 'Bebidas Lácteas'
+        ]);
+        this._requires_expiry_date = true;
+        this._tax_rate = () => this.chance.floating({ min: 17, max: 27, fixed: 2 });
+        this._icon_name = () => this.chance.pickone(['bottle', 'coffee', 'wine']);
+        break;
+      case 'cleaning':
+        this._name = () => this.chance.pickone([
+          'Produtos de Limpeza', 'Detergentes', 'Desinfetantes', 'Papel Higiênico',
+          'Produtos para Roupa'
+        ]);
+        this._requires_expiry_date = false;
+        this._tax_rate = () => this.chance.floating({ min: 17, max: 18, fixed: 2 });
+        this._icon_name = () => this.chance.pickone(['spray', 'soap', 'tissue']);
+        break;
+      case 'personal_care':
+        this._name = () => this.chance.pickone([
+          'Higiene Pessoal', 'Cosméticos', 'Perfumaria', 'Cuidados com Cabelo',
+          'Produtos para Bebê'
+        ]);
+        this._requires_expiry_date = true;
+        this._tax_rate = () => this.chance.floating({ min: 17, max: 27, fixed: 2 });
+        this._icon_name = () => this.chance.pickone(['shampoo', 'perfume', 'baby']);
+        break;
+      case 'electronics':
+        this._name = () => this.chance.pickone([
+          'Eletrônicos', 'Pilhas e Baterias', 'Acessórios', 'Telefonia'
+        ]);
+        this._requires_expiry_date = false;
+        this._tax_rate = () => this.chance.floating({ min: 17, max: 25, fixed: 2 });
+        this._icon_name = () => this.chance.pickone(['phone', 'battery', 'headphones']);
+        break;
+    }
     return this;
   }
 
   build(): TBuild {
-    const categories = new Array(this.countObjs)
-      .fill(undefined)
-      .map((_, index) => {
-        const category = new Category({
-          category_id: !this._category_id ? undefined : this.callFactory(this._category_id, index),
-          store_id: this.callFactory(this._store_id, index),
-          name: this.callFactory(this._name, index),
-          description: this.callFactory(this._description, index),
-          is_active: this.callFactory(this._is_active, index),
-          parent_category_id: this.callFactory(this._parent_category_id, index),
-          tax_rate: this.callFactory(this._tax_rate, index),
-          default_margin_percentage: this.callFactory(this._default_margin_percentage, index),
-          requires_expiry_date: this.callFactory(this._requires_expiry_date, index),
-          display_order: this.callFactory(this._display_order, index),
-          icon_name: this.callFactory(this._icon_name, index),
-          ...(this._created_at && { created_at: this.callFactory(this._created_at, index) }),
-          ...(this._updated_at && { updated_at: this.callFactory(this._updated_at, index) }),
-        });
-        category.validate();
-        return category;
+    const categories = new Array(this.countObjs).fill(undefined).map((_, index) => {
+      const category = new Category({
+        category_id: this.callFactory(this._category_id, index),
+        store_id: this.callFactory(this._store_id, index),
+        name: this.callFactory(this._name, index),
+        description: this.callFactory(this._description, index),
+        is_active: this.callFactory(this._is_active, index),
+        parent_category_id: this.callFactory(this._parent_category_id, index),
+        tax_rate: this.callFactory(this._tax_rate, index),
+        default_margin_percentage: this.callFactory(this._default_margin_percentage, index),
+        requires_expiry_date: this.callFactory(this._requires_expiry_date, index),
+        display_order: this.callFactory(this._display_order, index),
+        icon_name: this.callFactory(this._icon_name, index),
+        created_at: this.callFactory(this._created_at, index),
+        updated_at: this.callFactory(this._updated_at, index),
       });
-    return (this.countObjs === 1 ? categories[0] : categories) as TBuild;
+      return category;
+    });
+    return this.countObjs === 1 ? (categories[0] as any) : (categories as any);
   }
 
   get category_id() {
@@ -235,12 +254,10 @@ export class CategoryFakeBuilder<TBuild = any> {
   }
 
   private getValue(prop: any) {
-    const optional = ['category_id', 'created_at'];
+    const optional = ['category_id', 'created_at', 'updated_at'];
     const privateProp = `_${prop}` as keyof this;
-    if (!this[privateProp] && optional.includes(prop)) {
-      throw new Error(
-        `Property ${prop} not have a factory, use 'with' methods`,
-      );
+    if (!optional.includes(prop) && !this[privateProp]) {
+      throw new Error(`Property ${prop} not have a factory, use 'with' methods`);
     }
     return this.callFactory(this[privateProp], 0);
   }
@@ -250,41 +267,28 @@ export class CategoryFakeBuilder<TBuild = any> {
   }
 
   private getSupermarketCategoryName(): string {
-    const supermarketCategories = [
-      'Alimentos', 'Bebidas', 'Limpeza', 'Higiene Pessoal', 'Carnes e Aves',
-      'Laticínios', 'Padaria', 'Hortifruti', 'Congelados', 'Eletrônicos',
-      'Utilidades Domésticas', 'Pet Shop', 'Farmácia', 'Papelaria'
-    ];
-    return this.chance.pickone(supermarketCategories);
+    return this.chance.pickone([
+      'Alimentação', 'Bebidas', 'Limpeza', 'Higiene', 'Eletrônicos',
+      'Casa e Jardim', 'Pet Shop', 'Farmácia', 'Bazar'
+    ]);
   }
 
-  private getSupermarketCategoryDescription(): string {
+  private getSupermarketCategoryDescription(): string | null {
     const descriptions = [
-      'Produtos alimentícios diversos',
-      'Bebidas em geral',
-      'Produtos de limpeza e higiene doméstica',
-      'Cuidados pessoais e beleza',
-      'Carnes frescas e processadas',
-      'Leites, queijos e derivados',
-      'Pães, bolos e produtos de confeitaria',
-      'Frutas, verduras e legumes frescos',
-      'Produtos congelados e sorvetes',
-      'Eletrônicos e eletrodomésticos',
-      'Utensílios para casa',
-      'Produtos para animais de estimação',
-      'Medicamentos e produtos farmacêuticos',
-      'Material de escritório e escolar'
+      'Categoria com produtos essenciais para o dia a dia',
+      'Produtos selecionados com qualidade garantida',
+      'Variedade de itens para todas as necessidades',
+      'Produtos com os melhores preços do mercado',
+      'Categoria com produtos premium e populares',
+      null // Algumas categorias podem não ter descrição
     ];
     return this.chance.pickone(descriptions);
   }
 
   private getSupermarketIconName(): string {
-    const icons = [
-      'food-icon', 'beverage-icon', 'cleaning-icon', 'personal-care-icon',
-      'meat-icon', 'dairy-icon', 'bakery-icon', 'produce-icon',
-      'frozen-icon', 'electronics-icon', 'home-icon', 'pet-icon',
-      'pharmacy-icon', 'office-icon'
-    ];
-    return this.chance.pickone(icons);
+    return this.chance.pickone([
+      'shopping-cart', 'apple', 'bottle', 'spray', 'shampoo',
+      'phone', 'home', 'pet', 'medical', 'gift'
+    ]);
   }
 }

@@ -5,6 +5,7 @@ import { Transform, Type } from 'class-transformer';
 
 export class ListCategoriesFilter {
   name?: string;
+  store_id: string;
 }
 
 export class ListCategoriesInput implements SearchInput<ListCategoriesFilter> {

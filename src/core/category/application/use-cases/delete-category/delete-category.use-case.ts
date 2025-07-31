@@ -3,9 +3,11 @@ import { ICategoryRepository } from '../../../domain/repositories/category.repos
 import { CategoryId } from '../../../domain/category.aggregate';
 import { Category } from '../../../domain/category.aggregate';
 import { NotFoundError } from '../../../../shared/domain/errors/not-found.error';
+import { EntityValidationError } from '@core/shared/domain/validators/validation.error';
 
 export type DeleteCategoryInput = {
   id: string;
+  store_id: string;
 };
 
 export type DeleteCategoryOutput = {
@@ -20,23 +22,18 @@ export class DeleteCategoryUseCase
 
   async execute(input: DeleteCategoryInput): Promise<DeleteCategoryOutput> {
     const categoryId = new CategoryId(input.id);
+    
     const category = await this.categoryRepo.findById(categoryId);
+    if (!category) throw new NotFoundError(input.id, Category);
 
-    if (!category) {
-      throw new NotFoundError(input.id, Category);
-    }
+    const subcategories = await this.categoryRepo.findByParentId(input.store_id, categoryId);
+    category.prepareForDeletion(subcategories, input.store_id);
 
-    // Verificar se a categoria tem subcategorias
-    const subcategories = await this.categoryRepo.findByParentId(categoryId);
-    if (subcategories.length > 0) {
-      throw new Error('Cannot delete category with subcategories');
+    if (category.notification.hasErrors()) {
+      throw new EntityValidationError(category.notification.toJSON());
     }
 
     await this.categoryRepo.delete(categoryId);
-
-    return {
-      id: input.id,
-      deleted: true,
-    };
+    return { id: input.id, deleted: true };
   }
-} 
+}

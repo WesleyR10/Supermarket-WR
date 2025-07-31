@@ -14,26 +14,44 @@ export class CategoryInMemoryRepository
 {
   sortableFields: string[] = ['name', 'display_order', 'created_at', 'is_active', 'tax_rate', 'default_margin_percentage'];
 
-  async findActiveCategories(): Promise<Category[]> {
-    return this.items.filter(item => item.is_active);
+  // Métodos específicos agora incluem isolamento por store_id
+  async findActiveCategories(storeId: string): Promise<Category[]> {
+    return this.items.filter(item => item.store_id === storeId && item.is_active);
   }
 
-  async findRootCategories(): Promise<Category[]> {
-    return this.items.filter(item => item.parent_category_id === null);
-  }
-
-  async findByParentId(parentId: CategoryId): Promise<Category[]> {
+  async findRootCategories(storeId: string): Promise<Category[]> {
     return this.items.filter(item => 
-      item.parent_category_id && item.parent_category_id.equals(parentId)
+      item.store_id === storeId && item.parent_category_id === null
     );
   }
 
-  async findPerishableCategories(): Promise<Category[]> {
-    return this.items.filter(item => item.requires_expiry_date);
+  async findByParentId(storeId: string, parentId: CategoryId): Promise<Category[]> {
+    return this.items.filter(item => 
+      item.store_id === storeId &&
+      item.parent_category_id && 
+      item.parent_category_id.equals(parentId)
+    );
   }
 
-  async findPromotionEligibleCategories(): Promise<Category[]> {
-    return this.items.filter(item => item.isPromotionEligible());
+  async findPerishableCategories(storeId: string): Promise<Category[]> {
+    return this.items.filter(item => 
+      item.store_id === storeId && item.requires_expiry_date
+    );
+  }
+
+  async findPromotionEligibleCategories(storeId: string): Promise<Category[]> {
+    return this.items.filter(item => 
+      item.store_id === storeId && item.isPromotionEligible()
+    );
+  }
+
+  // Novos métodos para multi-tenancy
+  async findByStoreId(storeId: string): Promise<Category[]> {
+    return this.items.filter(item => item.store_id === storeId);
+  }
+
+  async countByStoreId(storeId: string): Promise<number> {
+    return this.items.filter(item => item.store_id === storeId).length;
   }
 
   protected async applyFilter(
@@ -45,6 +63,11 @@ export class CategoryInMemoryRepository
     }
 
     return items.filter((item) => {
+      // Filtro obrigatório por store_id para isolamento multi-tenant
+      if (filter.store_id && item.store_id !== filter.store_id) {
+        return false;
+      }
+
       // Filtro por nome (busca parcial, case insensitive)
       if (filter.name && !item.name.toLowerCase().includes(filter.name.toLowerCase())) {
         return false;

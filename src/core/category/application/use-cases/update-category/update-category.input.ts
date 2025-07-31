@@ -9,6 +9,7 @@ import {
 
 export type UpdateCategoryInputConstructorProps = {
   id: string;
+  store_id: string;
   name?: string;
   description?: string | null;
   is_active?: boolean;
@@ -24,6 +25,10 @@ export class UpdateCategoryInput {
   @IsString()
   @IsNotEmpty()
   id: string;
+
+  @IsString(  )
+  @IsNotEmpty()
+  store_id: string;
 
   @IsString()
   @IsOptional()
@@ -64,6 +69,7 @@ export class UpdateCategoryInput {
   constructor(props: UpdateCategoryInputConstructorProps) {
     if (!props) return;
     this.id = props.id;
+    this.store_id = props.store_id;
     this.name = props.name;
     this.description = props.description;
     this.is_active = props.is_active;

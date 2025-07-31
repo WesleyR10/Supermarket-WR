@@ -121,5 +121,23 @@ describe('CreateCategoryUseCase Unit Tests', () => {
       expect(spyInsert).toHaveBeenCalledTimes(1);
       expect(spyInsert).toHaveBeenCalledWith(expect.any(Object));
     });
+
+    // Testa erro de validação sem store_id (multi-tenancy)
+    it('should throw validation error without store_id', async () => {
+      const input = { name: 'Test' }; // Sem store_id
+      // @ts-ignore
+      await expect(useCase.execute(input)).rejects.toThrow(EntityValidationError);
+    });
+
+    // Testa criação em stores diferentes (isolamento multi-tenant)
+    it('should create categories in different stores independently', async () => {
+      const input1 = { name: 'Cat1', store_id: 'store1' };
+      const input2 = { name: 'Cat2', store_id: 'store2' };
+      await useCase.execute(input1);
+      await useCase.execute(input2);
+      expect(repository.items).toHaveLength(2);
+      expect(repository.items[0].store_id).toBe('store1');
+      expect(repository.items[1].store_id).toBe('store2');
+    });
   });
 });

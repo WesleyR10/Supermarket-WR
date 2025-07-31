@@ -83,7 +83,7 @@ export class Category extends AggregateRoot {
       ...props,
       parent_category_id: props.parent_category_id ? new CategoryId(props.parent_category_id) : null,
     });
-    category.validate(['name']);
+    category.validate(['name', 'store_id']);
     return category;
   }
 
@@ -198,6 +198,16 @@ export class Category extends AggregateRoot {
     );
   }
 
+  prepareForDeletion(subcategories: Category[], store_id: string) {
+    if (this.store_id !== store_id) {
+      this.notification.addError('Category does not belong to this store');
+    }
+    if (subcategories.length > 0) {
+      this.notification.addError('Cannot delete category with subcategories');
+    }
+    // Aqui poderia marcar como deletado se for soft delete
+  }
+
   validate(fields?: string[]) {
     const validator = CategoryValidatorFactory.create();
     return validator.validate(this.notification, this, fields);
@@ -224,4 +234,4 @@ export class Category extends AggregateRoot {
       updated_at: this.updated_at,
     };
   }
-} 
+}

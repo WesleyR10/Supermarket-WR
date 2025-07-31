@@ -24,6 +24,13 @@ export class UpdateCategoryUseCase
       throw new NotFoundError(input.id, Category);
     }
 
+    if (category.store_id !== input.store_id) {
+      throw new EntityValidationError([
+        {
+          store_id: ['Category does not belong to this store'],
+        },
+      ]);
+    }
     // Atualizar propriedades
     if (input.name !== undefined) category.name = input.name;
     if (input.description !== undefined) category.description = input.description;
