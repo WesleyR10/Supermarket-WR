@@ -14,62 +14,74 @@ export class ProductInMemoryRepository
 {
   sortableFields: string[] = ['name', 'price', 'created_at', 'is_active', 'brand', 'unit_type'];
 
-  // Métodos básicos de busca
-  async findByCategory(categoryId: string): Promise<Product[]> {
-    return this.items.filter(item => item.category_id === categoryId);
+  // Métodos básicos de busca - CORRIGIDOS com store_id
+  async findByCategory(storeId: string, categoryId: string): Promise<Product[]> {
+    return this.items.filter(item => item.store_id === storeId && item.category_id === categoryId);
   }
 
-  async findByBarcode(barcode: string): Promise<Product | null> {
-    const product = this.items.find(item => item.barcode === barcode);
+  async findByBarcode(storeId: string, barcode: string): Promise<Product | null> {
+    const product = this.items.find(item => item.store_id === storeId && item.barcode === barcode);
     return product || null;
   }
 
-  async findByBrand(brand: string): Promise<Product[]> {
-    return this.items.filter(item => item.brand === brand);
+  async findByBrand(storeId: string, brand: string): Promise<Product[]> {
+    return this.items.filter(item => item.store_id === storeId && item.brand === brand);
   }
 
-  async findByUnitType(unitType: UnitType): Promise<Product[]> {
-    return this.items.filter(item => item.unit_type === unitType);
+  async findByUnitType(storeId: string, unitType: UnitType): Promise<Product[]> {
+    return this.items.filter(item => item.store_id === storeId && item.unit_type === unitType);
   }
 
-  async findBySupplierCode(supplierCode: string): Promise<Product[]> {
-    return this.items.filter(item => item.supplier_code === supplierCode);
+  async findBySupplierCode(storeId: string, supplierCode: string): Promise<Product[]> {
+    return this.items.filter(item => item.store_id === storeId && item.supplier_code === supplierCode);
   }
 
   // Métodos específicos do negócio de supermercado
-  async findWeighableProducts(): Promise<Product[]> {
-    return this.items.filter(item => item.requires_weighing || item.unit_type === UnitType.KG);
-  }
-
-  async findPerishableProducts(): Promise<Product[]> {
-    return this.items.filter(item => item.isPerishable());
-  }
-
-  async findProductsWithoutNcm(): Promise<Product[]> {
-    return this.items.filter(item => !item.ncm_code || item.ncm_code.trim() === '');
-  }
-
-  async findInactiveProducts(): Promise<Product[]> {
-    return this.items.filter(item => !item.is_active);
-  }
-
-  async findByPriceRange(minPrice: number, maxPrice: number): Promise<Product[]> {
+  async findWeighableProducts(storeId: string): Promise<Product[]> {
     return this.items.filter(item => 
-      item.price >= minPrice && item.price <= maxPrice
+      item.store_id === storeId && 
+      (item.requires_weighing || item.unit_type === UnitType.KG)
+    );
+  }
+
+  async findPerishableProducts(storeId: string): Promise<Product[]> {
+    return this.items.filter(item => item.store_id === storeId && item.isPerishable());
+  }
+
+  async findProductsWithoutNcm(storeId: string): Promise<Product[]> {
+    return this.items.filter(item => 
+      item.store_id === storeId && 
+      (!item.ncm_code || item.ncm_code.trim() === '')
+    );
+  }
+
+  async findInactiveProducts(storeId: string): Promise<Product[]> {
+    return this.items.filter(item => item.store_id === storeId && !item.is_active);
+  }
+
+  async findByPriceRange(storeId: string, minPrice: number, maxPrice: number): Promise<Product[]> {
+    return this.items.filter(item => 
+      item.store_id === storeId &&
+      item.price >= minPrice && 
+      item.price <= maxPrice
     );
   }
 
   // Métodos de análise de margem
-  async findLowMarginProducts(minimumMargin: number): Promise<Product[]> {
+  async findLowMarginProducts(storeId: string, minimumMargin: number): Promise<Product[]> {
     return this.items.filter(item => {
+      if (item.store_id !== storeId) return false;
       const margin = item.calculateMarginPercentage();
       return margin !== null && margin < minimumMargin;
     });
   }
 
-  async getHighestMarginProducts(limit: number = 10): Promise<Product[]> {
+  async getHighestMarginProducts(storeId: string, limit: number = 10): Promise<Product[]> {
     const productsWithMargin = this.items
-      .filter(item => item.calculateMarginPercentage() !== null)
+      .filter(item => 
+        item.store_id === storeId && 
+        item.calculateMarginPercentage() !== null
+      )
       .sort((a, b) => {
         const marginA = a.calculateMarginPercentage() || 0;
         const marginB = b.calculateMarginPercentage() || 0;
@@ -79,9 +91,12 @@ export class ProductInMemoryRepository
     return productsWithMargin.slice(0, limit);
   }
 
-  async getLowestMarginProducts(limit: number = 10): Promise<Product[]> {
+  async getLowestMarginProducts(storeId: string, limit: number = 10): Promise<Product[]> {
     const productsWithMargin = this.items
-      .filter(item => item.calculateMarginPercentage() !== null)
+      .filter(item => 
+        item.store_id === storeId && 
+        item.calculateMarginPercentage() !== null
+      )
       .sort((a, b) => {
         const marginA = a.calculateMarginPercentage() || 0;
         const marginB = b.calculateMarginPercentage() || 0;
@@ -92,31 +107,33 @@ export class ProductInMemoryRepository
   }
 
   // Métodos de análise de vendas (simulados)
-  async findTopSellingProducts(limit: number = 10): Promise<Product[]> {
+  async findTopSellingProducts(storeId: string, limit: number = 10): Promise<Product[]> {
     // Implementação simulada - em produção integraria com bounded context de sales
     // Por enquanto, retorna produtos ativos ordenados por nome
     return this.items
-      .filter(item => item.is_active)
+      .filter(item => item.store_id === storeId && item.is_active)
       .sort((a, b) => a.name.localeCompare(b.name, 'pt-BR'))
       .slice(0, limit);
   }
 
-  async findLowStockProducts(): Promise<Product[]> {
+  async findLowStockProducts(storeId: string): Promise<Product[]> {
     // Implementação simulada - em produção integraria com bounded context de inventory
     // Por enquanto, retorna produtos ativos (simulando que têm estoque)
-    return this.items.filter(item => item.is_active);
+    return this.items.filter(item => item.store_id === storeId && item.is_active);
   }
 
   // Métodos de validação e verificação
-  async existsByBarcode(barcode: string, excludeId?: ProductId): Promise<boolean> {
+  async existsByBarcode(storeId: string, barcode: string, excludeId?: ProductId): Promise<boolean> {
     return this.items.some(item => 
+      item.store_id === storeId &&
       item.barcode === barcode && 
       (!excludeId || !item.product_id.equals(excludeId))
     );
   }
 
-  async existsByNameInCategory(name: string, categoryId: string, excludeId?: ProductId): Promise<boolean> {
+  async existsByNameInCategory(storeId: string, name: string, categoryId: string, excludeId?: ProductId): Promise<boolean> {
     return this.items.some(item => 
+      item.store_id === storeId &&
       item.name.toLowerCase() === name.toLowerCase() &&
       item.category_id === categoryId &&
       (!excludeId || !item.product_id.equals(excludeId))
@@ -124,8 +141,10 @@ export class ProductInMemoryRepository
   }
 
   // Métodos de auditoria e compliance
-  async findComplianceIssues(): Promise<Product[]> {
+  async findComplianceIssues(storeId: string): Promise<Product[]> {
     return this.items.filter(item => {
+      if (item.store_id !== storeId) return false;
+      
       // Produtos que precisam de NCM mas não têm (preço > R$ 50)
       const needsNcm = item.requiresNcmCode() && (!item.ncm_code || item.ncm_code.trim() === '');
       
@@ -139,11 +158,13 @@ export class ProductInMemoryRepository
     });
   }
 
-  async findProductsNeedingPriceReview(): Promise<Product[]> {
+  async findProductsNeedingPriceReview(storeId: string): Promise<Product[]> {
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     
     return this.items.filter(item => {
+      if (item.store_id !== storeId) return false;
+      
       // Produtos sem custo definido
       const noCostPrice = !item.cost_price;
       
@@ -158,11 +179,12 @@ export class ProductInMemoryRepository
     });
   }
 
-  async findDuplicateProducts(): Promise<Product[]> {
+  async findDuplicateProducts(storeId: string): Promise<Product[]> {
+    const storeProducts = this.items.filter(item => item.store_id === storeId);
     const duplicates: Product[] = [];
     const seen = new Set<string>();
     
-    for (const item of this.items) {
+    for (const item of storeProducts) {
       // Considera duplicata se tem mesmo código de barras ou mesmo nome na mesma categoria
       const barcodeKey = `barcode:${item.barcode}`;
       const nameKey = `name:${item.name.toLowerCase()}:${item.category_id}`;
@@ -179,31 +201,37 @@ export class ProductInMemoryRepository
   }
 
   // Métodos de análise temporal
-  async findRecentlyCreated(days: number): Promise<Product[]> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-    
-    return this.items.filter(item => item.created_at >= cutoffDate);
-  }
-
-  async findRecentlyModified(days: number): Promise<Product[]> {
+  async findRecentlyCreated(storeId: string, days: number): Promise<Product[]> {
     const cutoffDate = new Date();
     cutoffDate.setDate(cutoffDate.getDate() - days);
     
     return this.items.filter(item => 
+      item.store_id === storeId && 
+      item.created_at >= cutoffDate
+    );
+  }
+
+  async findRecentlyModified(storeId: string, days: number): Promise<Product[]> {
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    
+    return this.items.filter(item => 
+      item.store_id === storeId &&
       item.updated_at >= cutoffDate && 
       item.created_at < cutoffDate // Excluir recém-criados
     );
   }
 
   // Métodos de estatísticas
-  async countByCategory(): Promise<{ category_id: string; count: number; }[]> {
+  async countByCategory(storeId: string): Promise<{ category_id: string; count: number; }[]> {
     const categoryCount = new Map<string, number>();
     
-    this.items.forEach(item => {
-      const current = categoryCount.get(item.category_id) || 0;
-      categoryCount.set(item.category_id, current + 1);
-    });
+    this.items
+      .filter(item => item.store_id === storeId)
+      .forEach(item => {
+        const current = categoryCount.get(item.category_id) || 0;
+        categoryCount.set(item.category_id, current + 1);
+      });
     
     return Array.from(categoryCount.entries()).map(([category_id, count]) => ({
       category_id,
@@ -211,15 +239,17 @@ export class ProductInMemoryRepository
     }));
   }
 
-  async countByBrand(): Promise<{ brand: string; count: number; }[]> {
+  async countByBrand(storeId: string): Promise<{ brand: string; count: number; }[]> {
     const brandCount = new Map<string, number>();
     
-    this.items.forEach(item => {
-      if (item.brand) {
-        const current = brandCount.get(item.brand) || 0;
-        brandCount.set(item.brand, current + 1);
-      }
-    });
+    this.items
+      .filter(item => item.store_id === storeId)
+      .forEach(item => {
+        if (item.brand) {
+          const current = brandCount.get(item.brand) || 0;
+          brandCount.set(item.brand, current + 1);
+        }
+      });
     
     return Array.from(brandCount.entries()).map(([brand, count]) => ({
       brand,
@@ -227,11 +257,15 @@ export class ProductInMemoryRepository
     }));
   }
 
-  async getTotalInventoryValue(): Promise<number> {
+  async getTotalInventoryValue(storeId: string): Promise<number> {
     // Implementação simulada - em produção integraria com inventory
     // Calcula valor baseado no preço de custo dos produtos ativos
     return this.items
-      .filter(item => item.is_active && item.cost_price)
+      .filter(item => 
+        item.store_id === storeId && 
+        item.is_active && 
+        item.cost_price
+      )
       .reduce((total, item) => total + (item.cost_price || 0), 0);
   }
 
@@ -245,6 +279,11 @@ export class ProductInMemoryRepository
     }
 
     return items.filter((item) => {
+      // FILTRO OBRIGATÓRIO POR STORE_ID para isolamento multi-tenant
+      if (filter.store_id && item.store_id !== filter.store_id) {
+        return false;
+      }
+
       // Filtro por nome (busca parcial, case insensitive)
       if (filter.name && !item.name.toLowerCase().includes(filter.name.toLowerCase())) {
         return false;
@@ -355,6 +394,15 @@ export class ProductInMemoryRepository
 
       return 0;
     });
+  }
+
+  // Métodos para multi-tenancy
+  async findByStoreId(storeId: string): Promise<Product[]> {
+    return this.items.filter(item => item.store_id === storeId);
+  }
+
+  async countByStoreId(storeId: string): Promise<number> {
+    return this.items.filter(item => item.store_id === storeId).length;
   }
 
   getEntity(): new (...args: any[]) => Product {

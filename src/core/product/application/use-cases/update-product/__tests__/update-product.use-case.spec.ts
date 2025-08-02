@@ -90,6 +90,7 @@ describe('UpdateProductUseCase Unit Tests', () => {
 
     expect(output).toStrictEqual({
       id: product.product_id.id,
+      store_id: 'store-123', // ADICIONADO
       category_id: 'category-123',
       name: 'Updated Product',
       description: 'Updated description',
@@ -161,5 +162,55 @@ describe('UpdateProductUseCase Unit Tests', () => {
     };
 
     await expect(() => useCase.execute(input)).rejects.toThrow(EntityValidationError);
+  });
+
+  it('should throw EntityValidationError when trying to update product from different store', async () => {
+    // Mock para desabilitar validação fiscal
+    jest.spyOn(storeSettingsService, 'isFiscalValidationEnabled').mockResolvedValue(false);
+
+    const product = Product.create({
+      store_id: 'store-456', // Produto pertence à loja 456
+      category_id: 'category-123',
+      name: 'Original Product',
+      barcode: '1234567890123',
+      price: 10.00,
+    });
+    await productRepository.insert(product);
+
+    const input: UpdateProductInput = {
+      id: product.product_id.id,
+      store_id: 'store-123', // Tentando atualizar com loja 123
+      name: 'Updated Product',
+      price: 15.00,
+    };
+
+    await expect(() => useCase.execute(input)).rejects.toThrow(EntityValidationError);
+  });
+
+  it('should successfully update product when store_id matches', async () => {
+    // Mock para desabilitar validação fiscal
+    jest.spyOn(storeSettingsService, 'isFiscalValidationEnabled').mockResolvedValue(false);
+
+    const product = Product.create({
+      store_id: 'store-123',
+      category_id: 'category-123',
+      name: 'Original Product',
+      barcode: '1234567890123',
+      price: 10.00,
+    });
+    await productRepository.insert(product);
+
+    const input: UpdateProductInput = {
+      id: product.product_id.id,
+      store_id: 'store-123', // Mesmo store_id
+      name: 'Updated Product',
+      price: 15.00,
+    };
+
+    const output = await useCase.execute(input);
+
+    expect(output.name).toBe('Updated Product');
+    expect(output.price).toBe(15.00);
+    expect(output.store_id).toBe('store-123');
   });
 });

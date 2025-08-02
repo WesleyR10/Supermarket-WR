@@ -1,10 +1,14 @@
 import { SearchInput } from '@core/shared/application/search-input';
 import { SortDirection } from '@core/shared/domain/repository/search-params';
 import { UnitType } from '@core/product/domain/product.aggregate';
-import { IsOptional, ValidateNested, IsInt, Min, IsEnum, IsBoolean, IsString, IsNumber } from 'class-validator';
+import { IsOptional, ValidateNested, IsInt, Min, IsEnum, IsBoolean, IsString, IsNumber, IsNotEmpty } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
 export class ListProductsFilter {
+  @IsString()
+  @IsNotEmpty()
+  store_id: string; // Tornar obrigatório, não opcional
+
   @IsOptional()
   @IsString()
   name?: string;

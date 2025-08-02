@@ -141,16 +141,38 @@ describe('CreateProductUseCase Unit Tests', () => {
     await expect(useCase.execute(input)).rejects.toThrow(EntityValidationError);
   });
 
-  it('should throw error when barcode is empty', async () => {
+  // Adicionar teste para barcode null (que deve ser aceito)
+  it('should create product with null barcode', async () => {
     const input = {
       store_id: 'store-123',
       category_id: 'category-123',
-      name: 'Produto Teste',
+      name: 'Produto sem Barcode',
+      barcode: null,
+      price: 10.00,
+    };
+
+    const output = await useCase.execute(input);
+
+    expect(output.id).toBeDefined();
+    expect(output.name).toBe('Produto sem Barcode');
+    expect(output.barcode).toBeNull();
+  });
+
+  // Adicionar teste para barcode vazio (que deve ser aceito)
+  it('should create product with empty barcode', async () => {
+    const input = {
+      store_id: 'store-123',
+      category_id: 'category-123',
+      name: 'Produto com Barcode Vazio',
       barcode: '',
       price: 10.00,
     };
 
-    await expect(useCase.execute(input)).rejects.toThrow(EntityValidationError);
+    const output = await useCase.execute(input);
+
+    expect(output.id).toBeDefined();
+    expect(output.name).toBe('Produto com Barcode Vazio');
+    expect(output.barcode).toBe('');
   });
 
   it('should throw error when price is negative', async () => {

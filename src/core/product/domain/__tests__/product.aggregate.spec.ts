@@ -5,6 +5,7 @@ describe('Product Aggregate Unit Tests', () => {
     test('should create product with default values', () => {
       const product = Product.fake()
         .aProduct()
+        .withStoreId('store-123')
         .withName('Coca-Cola 2L')
         .withCategoryId('category-123')
         .withBarcode('7894900011517')
@@ -12,6 +13,7 @@ describe('Product Aggregate Unit Tests', () => {
         .build();
 
       expect(product.product_id).toBeInstanceOf(ProductId);
+      expect(product.store_id).toBe('store-123');
       expect(product.category_id).toBe('category-123');
       expect(product.name).toBe('Coca-Cola 2L');
       expect(product.barcode).toBe('7894900011517');
@@ -26,6 +28,7 @@ describe('Product Aggregate Unit Tests', () => {
     test('should create product with all properties', () => {
       const product = Product.fake()
         .aProduct()
+        .withStoreId('store-123')
         .withCategoryId('category-123')
         .withName('Carne Bovina Premium')
         .withDescription('Carne bovina de primeira qualidade')
@@ -39,8 +42,9 @@ describe('Product Aggregate Unit Tests', () => {
         .withSupplierCode('FRIB001')
         .withNcmCode('02013000')
         .withRequiresWeighing(true)
-        .build() ; // Cast para Product
+        .build();
 
+      expect(product.store_id).toBe('store-123');
       expect(product.category_id).toBe('category-123');
       expect(product.name).toBe('Carne Bovina Premium');
       expect(product.description).toBe('Carne bovina de primeira qualidade');
@@ -117,17 +121,21 @@ describe('Product Aggregate Unit Tests', () => {
         category_id: 'category-123',
         name: 'Valid Product',
         barcode: '1234567890123',
-        price: 9.99,
+        price: 10.99,
       });
       
       expect(product).toBeInstanceOf(Product);
     });
 
     test('should validate product on business methods', () => {
-      const product = Product.fake().aProduct().build() ;
+      const product = Product.fake()
+        .aProduct()
+        .withStoreId('store-123')
+        .withName('Test Product')
+        .build();
       
-      product.changeName('Updated Product Name');
-      expect(product.name).toBe('Updated Product Name');
+      product.changeName('Updated Name');
+      expect(product.name).toBe('Updated Name');
     });
   });
 
@@ -156,7 +164,7 @@ describe('Product Aggregate Unit Tests', () => {
         .aProduct()
         .withUnitType(UnitType.KG)
         .withRequiresWeighing(true)
-        .build() ;
+        .build();
       
       expect(product.unit_type).toBe(UnitType.KG);
       expect(product.requires_weighing).toBe(true);
@@ -166,9 +174,79 @@ describe('Product Aggregate Unit Tests', () => {
       const product = Product.fake()
         .aProduct()
         .withBrand('Coca-Cola')
-        .build() ;
+        .build();
       
       expect(product.brand).toBe('Coca-Cola');
+    });
+  });
+
+  describe('store_id and multi-tenancy', () => {
+    test('should have validation error without store_id', () => {
+      // @ts-ignore store_id omitido intencionalmente
+      const product = Product.create({
+        category_id: 'category-123',
+        name: 'Test Product',
+        barcode: '1234567890123',
+        price: 10.99,
+      });
+  
+      expect(product.notification.hasErrors()).toBe(true);
+      expect(product.notification.errors.size).toBe(1);
+      expect(product.notification.errors.has('store_id')).toBe(true);
+      expect(product.notification.errors.get('store_id')?.includes('store_id should not be empty')).toBe(true);
+    });
+
+    test('should have validation error without category_id', () => {
+      // @ts-ignore category_id omitido intencionalmente
+      const product = Product.create({
+        store_id: 'store-123',
+        name: 'Test Product',
+        barcode: '1234567890123',
+        price: 10.99,
+      });
+  
+      expect(product.notification.hasErrors()).toBe(true);
+      expect(product.notification.errors.has('category_id')).toBe(true);
+      expect(product.notification.errors.get('category_id')?.includes('category_id should not be empty')).toBe(true);
+    });
+
+    test('should create product with specific store_id using fake builder', () => {
+      const storeId = 'store-123';
+      const product = Product.fake().aProduct().withStoreId(storeId).build();
+      expect(product.store_id).toBe(storeId);
+    });
+
+    test('should create products for different stores', () => {
+      const products = Product.fake().theProducts(2).withRandomStoreIds().build();
+      expect(products[0].store_id).not.toBe(products[1].store_id);
+    });
+
+    test('should create products for specific store', () => {
+      const storeId = 'store-456';
+      const products = Product.fake().productsForStore(storeId, 3).build();
+      products.forEach(product => {
+        expect(product.store_id).toBe(storeId);
+      });
+    });
+
+    test('should create products from different stores', () => {
+      const products = Product.fake().productsFromDifferentStores(5).build();
+      expect(products).toHaveLength(5);
+      // Verifica que nem todos os produtos têm o mesmo store_id
+      const uniqueStoreIds = new Set(products.map(p => p.store_id));
+      expect(uniqueStoreIds.size).toBeGreaterThan(1);
+    });
+
+    test('should create product for specific store and category', () => {
+      const storeId = 'store-789';
+      const categoryId = 'category-456';
+      const product = Product.fake()
+        .aProduct()
+        .forStoreAndCategory(storeId, categoryId)
+        .build();
+      
+      expect(product.store_id).toBe(storeId);
+      expect(product.category_id).toBe(categoryId);
     });
   });
 
@@ -178,6 +256,8 @@ describe('Product Aggregate Unit Tests', () => {
     beforeEach(() => {
       product = Product.fake()
         .aProduct()
+        .withStoreId('store-123')
+        .withCategoryId('category-123')
         .withName('Original Product')
         .withDescription('Original description')
         .withBarcode('1234567890123')

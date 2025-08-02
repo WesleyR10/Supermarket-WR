@@ -5,6 +5,7 @@ describe('ProductOutputMapper Unit Tests', () => {
   it('should convert a basic product to output', () => {
     const entity = Product.create({
       category_id: 'category-123',
+      store_id: 'store-123',
       name: 'Arroz Branco 5kg',
       description: 'Arroz branco longo fino',
       barcode: '1234567890123',
@@ -26,6 +27,7 @@ describe('ProductOutputMapper Unit Tests', () => {
     expect(output).toStrictEqual({
       id: entity.product_id.id,
       category_id: 'category-123',
+      store_id: 'store-123',
       name: 'Arroz Branco 5kg',
       description: 'Arroz branco longo fino',
       barcode: '1234567890123',
@@ -47,6 +49,8 @@ describe('ProductOutputMapper Unit Tests', () => {
 
   it('should convert a beverage product to output', () => {
     const entity = Product.fake().aProduct()
+      .withStoreId('store-123')
+      .withCategoryId('category-456')
       .withBeverage()
       .withName('Coca-Cola 2L')
       .withBrand('Coca-Cola')
@@ -55,13 +59,15 @@ describe('ProductOutputMapper Unit Tests', () => {
       .withPrice(5.99)
       .withCostPrice(3.50)
       .withNcmCode('22021000')
+      .withRequiresWeighing(false)
       .build() as Product;
     
     const output = ProductOutputMapper.toOutput(entity);
     
     expect(output).toStrictEqual({
       id: entity.product_id.id,
-      category_id: entity.category_id,
+      category_id: 'category-456',
+      store_id: 'store-123',
       name: 'Coca-Cola 2L',
       description: entity.description,
       barcode: entity.barcode,
@@ -75,7 +81,7 @@ describe('ProductOutputMapper Unit Tests', () => {
       dimensions: entity.dimensions,
       supplier_code: entity.supplier_code,
       ncm_code: '22021000',
-      requires_weighing: entity.requires_weighing,
+      requires_weighing: false,
       created_at: entity.created_at,
       updated_at: entity.updated_at,
     });
@@ -83,6 +89,8 @@ describe('ProductOutputMapper Unit Tests', () => {
 
   it('should convert a meat product to output', () => {
     const entity = Product.fake().aProduct()
+      .withStoreId('store-123')
+      .withCategoryId('category-789')
       .withMeatProduct()
       .withName('Carne Bovina Alcatra')
       .withBrand('Friboi')
@@ -98,7 +106,8 @@ describe('ProductOutputMapper Unit Tests', () => {
     
     expect(output).toStrictEqual({
       id: entity.product_id.id,
-      category_id: entity.category_id,
+      category_id: 'category-789',
+      store_id: 'store-123',
       name: 'Carne Bovina Alcatra',
       description: entity.description,
       barcode: entity.barcode,
@@ -120,6 +129,8 @@ describe('ProductOutputMapper Unit Tests', () => {
 
   it('should convert a cleaning product to output', () => {
     const entity = Product.fake().aProduct()
+      .withStoreId('store-123')
+      .withCategoryId('category-101')
       .withCleaningProduct()
       .withName('Detergente Ypê 500ml')
       .withBrand('Ypê')
@@ -128,13 +139,15 @@ describe('ProductOutputMapper Unit Tests', () => {
       .withPrice(2.99)
       .withCostPrice(1.80)
       .withNcmCode('34022000')
+      .withRequiresWeighing(false)
       .build() as Product;
     
     const output = ProductOutputMapper.toOutput(entity);
     
     expect(output).toStrictEqual({
       id: entity.product_id.id,
-      category_id: entity.category_id,
+      category_id: 'category-101',
+      store_id: 'store-123',
       name: 'Detergente Ypê 500ml',
       description: entity.description,
       barcode: entity.barcode,
@@ -148,7 +161,7 @@ describe('ProductOutputMapper Unit Tests', () => {
       dimensions: entity.dimensions,
       supplier_code: entity.supplier_code,
       ncm_code: '34022000',
-      requires_weighing: entity.requires_weighing,
+      requires_weighing: false,
       created_at: entity.created_at,
       updated_at: entity.updated_at,
     });
@@ -156,6 +169,8 @@ describe('ProductOutputMapper Unit Tests', () => {
 
   it('should convert a high-value product to output', () => {
     const entity = Product.fake().aProduct()
+      .withStoreId('store-123')
+      .withCategoryId('category-202')
       .withHighValueProduct()
       .withName('Micro-ondas Panasonic 32L')
       .withBrand('Panasonic')
@@ -165,13 +180,15 @@ describe('ProductOutputMapper Unit Tests', () => {
       .withDimensions('50x35x40cm')
       .withWeight(15000)
       .withNcmCode('85165000')
+      .withRequiresWeighing(false)
       .build() as Product;
     
     const output = ProductOutputMapper.toOutput(entity);
     
     expect(output).toStrictEqual({
       id: entity.product_id.id,
-      category_id: entity.category_id,
+      category_id: 'category-202',
+      store_id: 'store-123',
       name: 'Micro-ondas Panasonic 32L',
       description: entity.description,
       barcode: entity.barcode,
@@ -185,7 +202,7 @@ describe('ProductOutputMapper Unit Tests', () => {
       dimensions: '50x35x40cm',
       supplier_code: entity.supplier_code,
       ncm_code: '85165000',
-      requires_weighing: entity.requires_weighing,
+      requires_weighing: false,
       created_at: entity.created_at,
       updated_at: entity.updated_at,
     });
@@ -194,6 +211,7 @@ describe('ProductOutputMapper Unit Tests', () => {
   it('should convert a product with minimal data to output', () => {
     const entity = Product.create({
       category_id: 'category-456',
+      store_id: 'store-123',
       name: 'Produto Básico',
       barcode: '9876543210987',
       price: 1.99,
@@ -204,6 +222,7 @@ describe('ProductOutputMapper Unit Tests', () => {
     expect(output).toStrictEqual({
       id: entity.product_id.id,
       category_id: 'category-456',
+      store_id: 'store-123',
       name: 'Produto Básico',
       description: null,
       barcode: '9876543210987',
@@ -222,4 +241,4 @@ describe('ProductOutputMapper Unit Tests', () => {
       updated_at: entity.updated_at,
     });
   });
-}); 
+});

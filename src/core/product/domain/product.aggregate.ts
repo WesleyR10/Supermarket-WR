@@ -6,11 +6,11 @@ import { ProductValidatorFactory } from './product.validator';
 
 export type ProductConstructorProps = {
   product_id?: ProductId;
-  store_id: string; // Adicionar store_id
+  store_id: string;
   category_id: string;
   name: string;
   description?: string | null;
-  barcode: string;
+  barcode?: string | null; // Tornar opcional
   price: number;
   cost_price?: number | null;
   is_active?: boolean;
@@ -46,11 +46,11 @@ export class ProductId extends Uuid {}
 
 export class Product extends AggregateRoot {
   product_id: ProductId;
-  store_id: string; // Adicionar store_id
+  store_id: string;
   category_id: string;
   name: string;
   description: string | null;
-  barcode: string;
+  barcode: string | null; // Permitir null
   price: number;
   cost_price: number | null;
   is_active: boolean;
@@ -71,11 +71,11 @@ export class Product extends AggregateRoot {
   constructor(props: ProductConstructorProps) {
     super();
     this.product_id = props.product_id ?? new ProductId();
-    this.store_id = props.store_id; // Adicionar store_id
+    this.store_id = props.store_id;
     this.category_id = props.category_id;
     this.name = props.name;
     this.description = props.description ?? null;
-    this.barcode = props.barcode;
+    this.barcode = props.barcode ?? null; // Permitir null
     this.price = props.price;
     this.cost_price = props.cost_price ?? null;
     this.is_active = props.is_active ?? true;
@@ -97,7 +97,7 @@ export class Product extends AggregateRoot {
   // Factory method para criar produto
   static create(props: ProductConstructorProps): Product {
     const product = new Product(props);
-    product.validate();
+    product.validate(['store_id', 'category_id', 'name', 'price']);
     return product;
   }
 
@@ -319,6 +319,7 @@ export class Product extends AggregateRoot {
     return {
       product_id: this.product_id.id,
       category_id: this.category_id,
+      store_id: this.store_id,
       name: this.name,
       description: this.description,
       barcode: this.barcode,

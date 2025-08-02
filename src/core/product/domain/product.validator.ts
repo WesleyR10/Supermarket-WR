@@ -16,10 +16,6 @@ export class ProductRules {
   @MaxLength(100, { groups: ['name'] })
   name: string;
 
-  @IsString({ groups: ['barcode'] })
-  @IsNotEmpty({ groups: ['barcode'] })
-  barcode: string;
-
   @IsPositive({ groups: ['price'] })
   price: number;
 
@@ -45,15 +41,18 @@ export class ProductRules {
 
 export class ProductValidator extends ClassValidatorFields {
   validate(notification: Notification, data: any, fields?: string[]): boolean {
-    const defaultFields = ['store_id', 'category_id', 'name', 'barcode', 'price'];
-    
-    // Só incluir cost_price na validação se ele estiver presente
+    const requiredFields = ['store_id', 'category_id', 'name', 'price'];
+        
     if (data.cost_price !== undefined && data.cost_price !== null) {
-      defaultFields.push('cost_price');
+      requiredFields.push('cost_price');
     }
     
-    const newFields = fields?.length ? fields : defaultFields;
-    return super.validate(notification, new ProductRules(data), newFields);
+    // Garantir que campos obrigatórios sempre sejam validados
+    const fieldsToValidate = fields?.length 
+      ? [...new Set([...requiredFields, ...fields])] // Merge sem duplicatas
+      : requiredFields;
+    
+    return super.validate(notification, new ProductRules(data), fieldsToValidate);
   }
 }
 

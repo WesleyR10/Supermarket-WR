@@ -25,6 +25,15 @@ export class UpdateProductUseCase
       throw new NotFoundError(input.id, Product);
     }
 
+    // Validação de multi-tenancy
+    if (product.store_id !== input.store_id) {
+      throw new EntityValidationError([
+        {
+          store_id: ['Product does not belong to this store'],
+        },
+      ]);
+    }
+
     // Atualizar propriedades
     if (input.name !== undefined) product.changeName(input.name);
     if (input.description !== undefined) product.changeDescription(input.description);

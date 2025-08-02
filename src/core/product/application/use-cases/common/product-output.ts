@@ -2,10 +2,11 @@ import { Product, UnitType } from '../../../domain/product.aggregate';
 
 export type ProductOutput = {
   id: string;
+  store_id: string;
   category_id: string;
   name: string;
   description: string | null;
-  barcode: string;
+  barcode: string | null; // Corrigido: permite null
   price: number;
   cost_price: number | null;
   is_active: boolean;
@@ -28,8 +29,8 @@ export class ProductOutputMapper {
   static toOutput(entity: Product): ProductOutput {
     const { product_id, ...otherProps } = entity.toJSON();
     return {
-      id: entity.product_id.id,
+      id: product_id, 
       ...otherProps,
     };
   }
-} 
+}

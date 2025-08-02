@@ -4,71 +4,27 @@ import { Product, ProductId, UnitType } from './product.aggregate';
 type PropOrFactory<T> = T | ((index: number) => T);
 
 export class ProductFakeBuilder<TBuild = any> {
-  private _product_id: PropOrFactory<ProductId> = (_index) => new ProductId();
-  private _store_id: PropOrFactory<string> = (_index) => 
-    this.chance.guid({ version: 4 });
-  private _category_id: PropOrFactory<string> = (_index) => 
-    this.chance.guid({ version: 4 });
-  private _name: PropOrFactory<string> = (_index) => 
-    this.chance.pickone([
-      'Coca-Cola 2L',
-      'Arroz Tio João 5kg',
-      'Leite Integral 1L',
-      'Pão de Açúcar',
-      'Carne Bovina 1kg',
-      'Frango Inteiro',
-      'Macarrão Barilla 500g',
-      'Óleo de Soja 900ml',
-      'Açúcar Cristal 1kg',
-      'Café Pelé 500g',
-      'Detergente Ypê 500ml',
-      'Sabão em Pó OMO 1kg',
-      'Shampoo Seda 400ml',
-      'Biscoito Trakinas 126g',
-      'Iogurte Danone 170g'
-    ]);
-  private _description: PropOrFactory<string | null> = (_index) => 
-    this.chance.bool({ likelihood: 70 }) ? this.chance.sentence() : null;
-  private _barcode: PropOrFactory<string> = (_index) => 
-    this.chance.string({ length: 13, pool: '0123456789' });
-  private _price: PropOrFactory<number> = (_index) => 
-    parseFloat(this.chance.floating({ min: 0.50, max: 150.00, fixed: 2 }).toString());
-  private _cost_price: PropOrFactory<number | null> = (_index) => 
-    this.chance.bool({ likelihood: 80 }) ? 
-      parseFloat(this.chance.floating({ min: 0.30, max: 80.00, fixed: 2 }).toString()) : null;
+  private _product_id: PropOrFactory<ProductId> | undefined = undefined;
+  private _store_id: PropOrFactory<string> = (_index) => this.chance.guid();
+  private _category_id: PropOrFactory<string> = (_index) => this.chance.guid();
+  private _name: PropOrFactory<string> = (_index) => this.getSupermarketProductName();
+  private _description: PropOrFactory<string | null> = (_index) => this.getSupermarketProductDescription();
+  private _barcode: PropOrFactory<string> = (_index) => this.chance.string({ length: 13, pool: '0123456789' });
+  private _price: PropOrFactory<number> = (_index) => parseFloat(this.chance.floating({ min: 1.00, max: 100.00, fixed: 2 }).toString());
+  private _cost_price: PropOrFactory<number | null> = (_index) => parseFloat(this.chance.floating({ min: 0.50, max: 80.00, fixed: 2 }).toString());
   private _is_active: PropOrFactory<boolean> = (_index) => true;
-  
-  // Campos específicos do supermercado
-  private _brand: PropOrFactory<string | null> = (_index) => 
-    this.chance.bool({ likelihood: 75 }) ? this.chance.pickone([
-      'Coca-Cola', 'Nestlé', 'Unilever', 'Procter & Gamble', 'Danone',
-      'Tio João', 'Sadia', 'Perdigão', 'Barilla', 'Pelé', 'OMO', 'Ypê',
-      'Seda', 'Trakinas', 'Bauducco', 'Garoto', 'Lacta', 'Vigor'
-    ]) : null;
+  private _brand: PropOrFactory<string | null> = (_index) => this.getSupermarketBrand();
   private _unit_type: PropOrFactory<UnitType> = (_index) => UnitType.UNIT;
-  private _weight: PropOrFactory<number | null> = (_index) => 
-    this.chance.bool({ likelihood: 60 }) ? 
-      this.chance.integer({ min: 50, max: 5000 }) : null; // 50g a 5kg
-  private _volume: PropOrFactory<number | null> = (_index) => 
-    this.chance.bool({ likelihood: 40 }) ? 
-      this.chance.integer({ min: 100, max: 5000 }) : null; // 100ml a 5L
-  private _dimensions: PropOrFactory<string | null> = (_index) => 
-    this.chance.bool({ likelihood: 30 }) ? 
-      `${this.chance.integer({ min: 5, max: 30 })}x${this.chance.integer({ min: 5, max: 30 })}x${this.chance.integer({ min: 5, max: 30 })}cm` : null;
-  private _supplier_code: PropOrFactory<string | null> = (_index) => 
-    this.chance.bool({ likelihood: 50 }) ? 
-      this.chance.string({ length: 8, pool: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' }) : null;
-  private _ncm_code: PropOrFactory<string | null> = (_index) => 
-    this.chance.bool({ likelihood: 60 }) ? 
-      this.chance.string({ length: 8, pool: '0123456789' }) : null;
-  private _requires_weighing: PropOrFactory<boolean> = (_index) => false;
-  
-  private _created_at: PropOrFactory<Date> = (_index) => 
-    new Date(this.chance.date({ min: new Date(2020, 0, 1) }));
-  private _updated_at: PropOrFactory<Date> = (_index) => 
-    new Date(this.chance.date({ min: new Date(2023, 0, 1) }));
+  private _weight: PropOrFactory<number | null> = (_index) => this.chance.floating({ min: 0.1, max: 10.0, fixed: 3 });
+  private _volume: PropOrFactory<number | null> = (_index) => this.chance.floating({ min: 0.1, max: 5.0, fixed: 3 });
+  private _dimensions: PropOrFactory<string | null> = (_index) => `${this.chance.integer({ min: 5, max: 50 })}x${this.chance.integer({ min: 5, max: 50 })}x${this.chance.integer({ min: 5, max: 50 })}cm`;
+  private _supplier_code: PropOrFactory<string | null> = (_index) => this.chance.string({ length: 10, pool: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' });
+  private _ncm_code: PropOrFactory<string | null> = (_index) => this.chance.string({ length: 8, pool: '0123456789' });
+  private _requires_weighing: PropOrFactory<boolean> = (_index) => this.chance.bool({ likelihood: 20 });
+  private _created_at: PropOrFactory<Date> | undefined = undefined;
+  private _updated_at: PropOrFactory<Date> | undefined = undefined;
 
-  private countObjs = 1;
+  private countObjs;
   private chance: Chance.Chance;
 
   // Factory methods
@@ -76,18 +32,25 @@ export class ProductFakeBuilder<TBuild = any> {
     return new ProductFakeBuilder<Product>();
   }
 
-  private constructor() {
+  static theProducts(countObjs: number) {
+    return new ProductFakeBuilder<Product[]>(countObjs);
+  }
+
+  // Método específico para multi-tenancy - criar produtos para uma loja específica
+  static productsForStore(storeId: string, countObjs: number = 5) {
+    return new ProductFakeBuilder<Product[]>(countObjs).withStoreId(storeId);
+  }
+
+  // Método para criar produtos de diferentes lojas (para testes de isolamento)
+  static productsFromDifferentStores(countObjs: number = 10) {
+    return new ProductFakeBuilder<Product[]>(countObjs).withRandomStoreIds();
+  }
+
+  private constructor(countObjs: number = 1) {
+    this.countObjs = countObjs;
     this.chance = Chance();
   }
 
-  static theProducts(countObjs: number): ProductFakeBuilder {
-    const builder = new ProductFakeBuilder();
-    builder.countObjs = countObjs;
-    return builder;
-  }
-
-  // Métodos específicos do domínio de supermercado
-  
   withBeverage() {
     this._name = () => this.chance.pickone([
       'Coca-Cola 2L', 'Pepsi 2L', 'Guaraná Antarctica 2L', 'Sprite 2L',
@@ -141,8 +104,8 @@ export class ProductFakeBuilder<TBuild = any> {
   }
 
   withHighValueProduct() {
-    this._price = () => parseFloat(this.chance.floating({ min: 50.00, max: 500.00, fixed: 2 }).toString());
-    this._cost_price = () => parseFloat(this.chance.floating({ min: 30.00, max: 300.00, fixed: 2 }).toString());
+    this._price = () => parseFloat(this.chance.floating({ min: 101.00, max: 500.00, fixed: 2 }).toString());
+    this._cost_price = () => parseFloat(this.chance.floating({ min: 60.00, max: 300.00, fixed: 2 }).toString());
     return this;
   }
 
@@ -281,7 +244,7 @@ export class ProductFakeBuilder<TBuild = any> {
   build(): TBuild {
     const products = new Array(this.countObjs).fill(undefined).map((_, index) => {
       const product = new Product({
-        product_id: this.callFactory(this._product_id, index),
+        product_id: !this._product_id ? undefined : this.callFactory(this._product_id, index),
         store_id: this.callFactory(this._store_id, index),
         category_id: this.callFactory(this._category_id, index),
         name: this.callFactory(this._name, index),
@@ -298,12 +261,12 @@ export class ProductFakeBuilder<TBuild = any> {
         supplier_code: this.callFactory(this._supplier_code, index),
         ncm_code: this.callFactory(this._ncm_code, index),
         requires_weighing: this.callFactory(this._requires_weighing, index),
-        created_at: this.callFactory(this._created_at, index),
-        updated_at: this.callFactory(this._updated_at, index),
+        created_at: !this._created_at ? undefined : this.callFactory(this._created_at, index),
+        updated_at: !this._updated_at ? undefined : this.callFactory(this._updated_at, index),
       });
       return product;
     });
-    return (this.countObjs === 1 ? products[0] : products) as TBuild;
+    return this.countObjs === 1 ? (products[0] as any) : (products as any);
   }
 
   // Getters
@@ -388,10 +351,55 @@ export class ProductFakeBuilder<TBuild = any> {
     return this.callFactory(this[privateProp] as any, 0);
   }
 
+  // Método para gerar store_ids aleatórios (útil para testes de isolamento)
+  withRandomStoreIds() {
+    this._store_id = (_index) => this.chance.guid();
+    return this;
+  }
+
+  // Método para criar produtos com store_id específico (útil para testes)
+  forStore(storeId: string) {
+    this._store_id = storeId;
+    return this;
+  }
+
+  // Método para criar produtos com category_id específico
+  forCategory(categoryId: string) {
+    this._category_id = categoryId;
+    return this;
+  }
+
+  // Método para criar produtos com store_id e category_id específicos
+  forStoreAndCategory(storeId: string, categoryId: string) {
+    this._store_id = storeId;
+    this._category_id = categoryId;
+    return this;
+  }
+
   private callFactory(factoryOrValue: PropOrFactory<any>, index: number) {
     if (typeof factoryOrValue === 'function') {
       return factoryOrValue(index);
     }
     return factoryOrValue;
+  }
+
+  private getSupermarketProductName(): string {
+    return this.chance.pickone([
+      'Arroz Branco 5kg', 'Feijão Preto 1kg', 'Açúcar Cristal 1kg', 'Óleo de Soja 900ml',
+      'Macarrão Espaguete 500g', 'Farinha de Trigo 1kg', 'Sal Refinado 1kg', 'Café Torrado 500g',
+      'Leite Integral 1L', 'Ovos Brancos 12un', 'Pão de Forma', 'Margarina 500g',
+      'Detergente Neutro 500ml', 'Sabão em Pó 1kg', 'Papel Higiênico 4 rolos', 'Shampoo 400ml'
+    ]);
+  }
+
+  private getSupermarketProductDescription(): string | null {
+    return this.chance.bool({ likelihood: 70 }) ? this.chance.sentence({ words: 5 }) : null;
+  }
+
+  private getSupermarketBrand(): string | null {
+    return this.chance.bool({ likelihood: 80 }) ? this.chance.pickone([
+      'Tio João', 'Camil', 'União', 'Sadia', 'Perdigão', 'Nestlé', 'Danone',
+      'Coca-Cola', 'Pepsi', 'Guaraná Antarctica', 'Brahma', 'Skol', 'Omo', 'Ariel'
+    ]) : null;
   }
 }

@@ -3,7 +3,9 @@ import { SearchParams, SearchParamsConstructorProps } from '../../../shared/doma
 import { SearchResult } from '../../../shared/domain/repository/search-result';
 import { Product, ProductId, UnitType } from '../product.aggregate';
 
+// Filtro agora inclui store_id como obrigatório para isolamento multi-tenant
 export type ProductFilter = {
+  store_id?: string;
   name?: string;
   category_id?: string;
   brand?: string;
@@ -17,7 +19,11 @@ export type ProductFilter = {
 };
 
 export class ProductSearchParams extends SearchParams<ProductFilter> {
-  static create(props: SearchParamsConstructorProps<ProductFilter> = {}): ProductSearchParams {
+  static create(props: SearchParamsConstructorProps<ProductFilter>): ProductSearchParams {
+    // store_id é obrigatório
+    if (!props.filter?.store_id) {
+      throw new Error('store_id is required for product search');
+    }
     return new ProductSearchParams(props);
   }
 
@@ -31,7 +37,12 @@ export class ProductSearchParams extends SearchParams<ProductFilter> {
         ? null
         : value;
 
+    if (!_value || !_value.store_id) {
+      throw new Error('store_id is required for product filter to ensure multi-tenant isolation');
+    }
+
     const filter = {
+      store_id: `${_value.store_id}`,
       ...(_value && _value.name && { name: `${_value.name}` }),
       ...(_value && _value.category_id && { category_id: `${_value.category_id}` }),
       ...(_value && _value.brand && { brand: `${_value.brand}` }),
@@ -61,89 +72,65 @@ export interface IProductRepository extends ISearchableRepository<
   ProductSearchParams,
   ProductSearchResult
 > {
-  // Métodos básicos herdados de ISearchableRepository
-  // findById, findAll, insert, update, delete, search, etc.
-
-  // Métodos específicos do domínio de supermercado
-  
+  // Métodos específicos para supermercado - todos agora requerem store_id para isolamento
   // Buscar produtos por categoria
-  findByCategory(categoryId: string): Promise<Product[]>;
-  
+  findByCategory(storeId: string, categoryId: string): Promise<Product[]>;
   // Buscar produtos por código de barras
-  findByBarcode(barcode: string): Promise<Product | null>;
-  
+  findByBarcode(storeId: string, barcode: string): Promise<Product | null>;
   // Buscar produtos por marca
-  findByBrand(brand: string): Promise<Product[]>;
-  
+  findByBrand(storeId: string, brand: string): Promise<Product[]>;
   // Buscar produtos que requerem pesagem (açougue, frios)
-  findWeighableProducts(): Promise<Product[]>;
-  
+  findWeighableProducts(storeId: string): Promise<Product[]>;
   // Buscar produtos com estoque baixo (integração com inventory)
-  findLowStockProducts(): Promise<Product[]>;
-  
+  findLowStockProducts(storeId: string): Promise<Product[]>;
   // Buscar produtos por faixa de preço
-  findByPriceRange(minPrice: number, maxPrice: number): Promise<Product[]>;
-  
+  findByPriceRange(storeId: string, minPrice: number, maxPrice: number): Promise<Product[]>;
   // Buscar produtos perecíveis (que expiram)
-  findPerishableProducts(): Promise<Product[]>;
-  
+  findPerishableProducts(storeId: string): Promise<Product[]>;
   // Buscar produtos sem código NCM (para compliance fiscal)
-  findProductsWithoutNcm(): Promise<Product[]>;
-  
+  findProductsWithoutNcm(storeId: string): Promise<Product[]>;
   // Buscar produtos por fornecedor
-  findBySupplierCode(supplierCode: string): Promise<Product[]>;
-  
+  findBySupplierCode(storeId: string, supplierCode: string): Promise<Product[]>;
   // Buscar produtos inativos
-  findInactiveProducts(): Promise<Product[]>;
-  
+  findInactiveProducts(storeId: string): Promise<Product[]>;
   // Buscar produtos mais vendidos (integração com sales)
-  findTopSellingProducts(limit?: number): Promise<Product[]>;
-  
+  findTopSellingProducts(storeId: string, limit?: number): Promise<Product[]>;
   // Buscar produtos com margem baixa
-  findLowMarginProducts(minimumMargin: number): Promise<Product[]>;
-  
+  findLowMarginProducts(storeId: string, minimumMargin: number): Promise<Product[]>;
   // Buscar produtos por tipo de unidade
-  findByUnitType(unitType: UnitType): Promise<Product[]>;
-  
+  findByUnitType(storeId: string, unitType: UnitType): Promise<Product[]>;
   // Buscar produtos que precisam de análise de preço
-  findProductsNeedingPriceReview(): Promise<Product[]>;
-  
+  findProductsNeedingPriceReview(storeId: string): Promise<Product[]>;
   // Buscar produtos duplicados (mesmo código de barras)
-  findDuplicateProducts(): Promise<Product[]>;
+  findDuplicateProducts(storeId: string): Promise<Product[]>;
   
   // Relatórios específicos
-  
   // Contar produtos por categoria
-  countByCategory(): Promise<{ category_id: string; count: number }[]>;
-  
+  countByCategory(storeId: string): Promise<{ category_id: string; count: number }[]>;
   // Contar produtos por marca
-  countByBrand(): Promise<{ brand: string; count: number }[]>;
-  
+  countByBrand(storeId: string): Promise<{ brand: string; count: number }[]>;
   // Valor total do inventário
-  getTotalInventoryValue(): Promise<number>;
-  
+  getTotalInventoryValue(storeId: string): Promise<number>;
   // Produtos com maior margem
-  getHighestMarginProducts(limit?: number): Promise<Product[]>;
-  
+  getHighestMarginProducts(storeId: string, limit?: number): Promise<Product[]>;
   // Produtos com menor margem
-  getLowestMarginProducts(limit?: number): Promise<Product[]>;
+  getLowestMarginProducts(storeId: string, limit?: number): Promise<Product[]>;
   
   // Validações de negócio
-  
   // Verificar se código de barras já existe
-  existsByBarcode(barcode: string, excludeId?: ProductId): Promise<boolean>;
-  
+  existsByBarcode(storeId: string, barcode: string, excludeId?: ProductId): Promise<boolean>;
   // Verificar se nome já existe na categoria
-  existsByNameInCategory(name: string, categoryId: string, excludeId?: ProductId): Promise<boolean>;
+  existsByNameInCategory(storeId: string, name: string, categoryId: string, excludeId?: ProductId): Promise<boolean>;
   
   // Métodos de auditoria
-  
   // Produtos modificados recentemente
-  findRecentlyModified(days: number): Promise<Product[]>;
-  
+  findRecentlyModified(storeId: string, days: number): Promise<Product[]>;
   // Produtos criados recentemente
-  findRecentlyCreated(days: number): Promise<Product[]>;
-  
+  findRecentlyCreated(storeId: string, days: number): Promise<Product[]>;
   // Produtos com problemas de compliance
-  findComplianceIssues(): Promise<Product[]>;
+  findComplianceIssues(storeId: string): Promise<Product[]>;
+  // Buscar produtos por store_id
+  findByStoreId(storeId: string): Promise<Product[]>; 
+  // Contar produtos por store_id
+  countByStoreId(storeId: string): Promise<number>;
 }

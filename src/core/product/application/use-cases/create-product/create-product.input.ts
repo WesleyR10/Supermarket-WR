@@ -14,7 +14,7 @@ export type CreateProductInputConstructorProps = {
   store_id: string;
   category_id: string;
   name: string;
-  barcode: string;
+  barcode?: string | null; 
   price: number;
   description?: string | null;
   cost_price?: number | null;
@@ -47,8 +47,8 @@ export class CreateProductInput {
   description?: string | null;
 
   @IsString()
-  @IsNotEmpty()
-  barcode: string;
+  @IsOptional() 
+  barcode?: string | null;
 
   @IsNumber()
   price: number;
