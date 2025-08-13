@@ -1,11 +1,10 @@
 import { SearchInput } from '../../../../shared/application/search-input';
 import { SortDirection } from '../../../../shared/domain/repository/search-params';
-import { IsBoolean, IsDateString, IsNumber, IsOptional, IsString, IsUUID, ValidateNested, validateSync } from 'class-validator';
+import { IsBoolean, IsNumber, IsOptional, IsString, ValidateNested, validateSync } from 'class-validator';
 
 export class ListInventoriesFilter {
-  @IsOptional()
   @IsString()
-  store_id?: string;
+  store_id: string;
 
   @IsOptional()
   @IsString()
@@ -13,7 +12,7 @@ export class ListInventoriesFilter {
 
   @IsOptional()
   @IsString()
-  location_code?: string;
+  location?: string;
 
   @IsOptional()
   @IsString()
@@ -45,35 +44,19 @@ export class ListInventoriesFilter {
 
   @IsOptional()
   @IsNumber()
-  quantity_min?: number;
+  min_quantity?: number;
 
   @IsOptional()
   @IsNumber()
-  quantity_max?: number;
-
-  @IsOptional()
-  @IsNumber()
-  unit_cost_min?: number;
-
-  @IsOptional()
-  @IsNumber()
-  unit_cost_max?: number;
-
+  max_quantity?: number;
+  
   @IsOptional()
   @IsNumber()
   unit_price_min?: number;
-
+  
   @IsOptional()
   @IsNumber()
   unit_price_max?: number;
-
-  @IsOptional()
-  @IsDateString()
-  expiry_date_from?: Date;
-
-  @IsOptional()
-  @IsDateString()
-  expiry_date_to?: Date;
 }
 
 export class ListInventoriesInput implements SearchInput<ListInventoriesFilter> {
@@ -82,7 +65,7 @@ export class ListInventoriesInput implements SearchInput<ListInventoriesFilter> 
   sort?: string;
   sort_dir?: SortDirection;
   @ValidateNested()
-  filter?: ListInventoriesFilter;
+  filter!: ListInventoriesFilter;
 }
 
 export class ValidateListInventoriesInput {

@@ -2,7 +2,7 @@ import { Inventory } from '../../../domain/inventory.aggregate';
 import { InventoryOutputMapper } from './inventory-output';
 
 describe('InventoryOutputMapper Unit Tests', () => {
-  it('should convert an inventory item in output', () => {
+  it('should convert an inventory item to output', () => {
     const entity = Inventory.create({
       product_id: 'product-123',
       store_id: 'store-456',
@@ -10,6 +10,7 @@ describe('InventoryOutputMapper Unit Tests', () => {
       min_stock: 10,
       max_stock: 100,
       cost_price: 2.50,
+      unit_price: 5.00,
       supplier_id: 'supplier-789',
       location: 'A1-B2-C3',
       expiry_date: new Date('2024-12-31'),
@@ -32,13 +33,15 @@ describe('InventoryOutputMapper Unit Tests', () => {
       batch_number: 'BATCH-001',
       supplier_id: 'supplier-789',
       cost_price: 2.50,
+      unit_price: 5.00,
+      is_active: true,
       last_movement_date: entity.last_movement_date,
       created_at: entity.created_at,
       updated_at: entity.updated_at,
     });
   });
 
-  it('should convert an inventory item without optional fields in output', () => {
+  it('should convert an inventory item without optional fields to output', () => {
     const entity = Inventory.create({
       product_id: 'product-456',
       store_id: 'store-789',
@@ -63,13 +66,15 @@ describe('InventoryOutputMapper Unit Tests', () => {
       batch_number: null,
       supplier_id: null,
       cost_price: null,
+      unit_price: null,
+      is_active: true,
       last_movement_date: entity.last_movement_date,
       created_at: entity.created_at,
       updated_at: entity.updated_at,
     });
   });
 
-  it('should convert a perishable inventory item in output', () => {
+  it('should convert a perishable inventory item to output', () => {
     const entity = Inventory.create({
       product_id: 'perishable-123',
       store_id: 'store-001',
@@ -77,8 +82,9 @@ describe('InventoryOutputMapper Unit Tests', () => {
       min_stock: 3,
       max_stock: 30,
       cost_price: 5.00,
+      unit_price: 12.50,
       supplier_id: 'dairy-supplier-456',
-      location: 'REFRIGERATOR-A1',
+      location: 'FRIDGE-1-1',
       expiry_date: new Date('2024-02-15'),
       batch_number: 'DAIRY-BATCH-456',
     });
@@ -94,14 +100,16 @@ describe('InventoryOutputMapper Unit Tests', () => {
       quantity: 15,
       min_stock: 3,
       max_stock: 30,
-      location: 'REFRIGERATOR-A1',
+      location: 'FRIDGE-1-1',
       expiry_date: new Date('2024-02-15'),
       batch_number: 'DAIRY-BATCH-456',
       supplier_id: 'dairy-supplier-456',
       cost_price: 5.00,
+      unit_price: 12.50,
+      is_active: true,
       last_movement_date: entity.last_movement_date,
       created_at: entity.created_at,
       updated_at: entity.updated_at,
     });
   });
-}); 
+});

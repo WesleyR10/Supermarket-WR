@@ -10,7 +10,7 @@ export class ListInventoriesUseCase
   constructor(private readonly inventoryRepo: IInventoryRepository) {}
 
   async execute(input: ListInventoriesInput): Promise<ListInventoriesOutput> {
-    const params = new InventorySearchParams(input);
+    const params = InventorySearchParams.create(input);
     const searchResult = await this.inventoryRepo.search(params);
     return this.toOutput(searchResult);
   }

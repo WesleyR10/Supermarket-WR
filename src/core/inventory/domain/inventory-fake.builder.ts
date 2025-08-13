@@ -1,5 +1,9 @@
 import { Chance } from 'chance';
 import { Inventory, InventoryId } from './inventory.aggregate';
+import { Quantity } from '../../shared/domain/value-objects/quantity.vo';
+import { Location } from '../../shared/domain/value-objects/location.vo';
+import { ExpiryDate } from '../../shared/domain/value-objects/expiry-date.vo';
+import { Money } from '../../shared/domain/value-objects/money.vo';
 
 type PropOrFactory<T> = T | ((index: number) => T);
 
@@ -8,14 +12,14 @@ export class InventoryFakeBuilder<TBuild = any> {
   private _inventory_item_id: PropOrFactory<InventoryId> | undefined = undefined;
   private _product_id: PropOrFactory<string> = (_index) => this.chance.guid();
   private _store_id: PropOrFactory<string> = (_index) => this.chance.guid();
-  private _quantity: PropOrFactory<number> = (_index) => this.chance.integer({ min: 0, max: 1000 });
-  private _minimum_quantity: PropOrFactory<number> = (_index) => this.chance.integer({ min: 10, max: 100 });
-  private _maximum_quantity: PropOrFactory<number> = (_index) => this.chance.integer({ min: 200, max: 5000 });
-  private _unit_cost: PropOrFactory<number> = (_index) => this.chance.floating({ min: 1, max: 100, fixed: 2 });
-  private _unit_price: PropOrFactory<number> = (_index) => this.chance.floating({ min: 2, max: 200, fixed: 2 });
+  private _quantity: PropOrFactory<Quantity> = (_index) => new Quantity(this.chance.integer({ min: 0, max: 1000 }));
+  private _min_stock: PropOrFactory<Quantity> = (_index) => new Quantity(this.chance.integer({ min: 10, max: 100 }));
+  private _max_stock: PropOrFactory<Quantity> = (_index) => new Quantity(this.chance.integer({ min: 200, max: 5000 }));
+  private _cost_price: PropOrFactory<Money> = (_index) => new Money(this.chance.floating({ min: 1, max: 100, fixed: 2 }));
+  private _unit_price: PropOrFactory<Money | null> = (_index) => new Money(this.chance.floating({ min: 1, max: 200, fixed: 2 }));
   private _supplier_id: PropOrFactory<string | null> = (_index) => this.chance.guid();
-  private _location_code: PropOrFactory<string | null> = (_index) => this.getLocationCode();
-  private _expiry_date: PropOrFactory<Date | null> = (_index) => this.getExpiryDate();
+  private _location: PropOrFactory<Location | null> = (_index) => this.getLocation();
+  private _expiry_date: PropOrFactory<ExpiryDate | null> = (_index) => this.getExpiryDate();
   private _batch_number: PropOrFactory<string | null> = (_index) => this.getBatchNumber();
   private _is_active: PropOrFactory<boolean> = (_index) => true;
   // auto generated in entity
@@ -52,28 +56,76 @@ export class InventoryFakeBuilder<TBuild = any> {
     return this;
   }
 
-  withQuantity(valueOrFactory: PropOrFactory<number>) {
-    this._quantity = valueOrFactory;
+  withQuantity(valueOrFactory: PropOrFactory<number> | PropOrFactory<Quantity>) {
+    if (typeof valueOrFactory === 'number') {
+      this._quantity = new Quantity(valueOrFactory);
+    } else if (typeof valueOrFactory === 'function') {
+      this._quantity = (index) => {
+        const value = valueOrFactory(index);
+        return value instanceof Quantity ? value : new Quantity(value as number);
+      };
+    } else {
+      this._quantity = valueOrFactory as PropOrFactory<Quantity>;
+    }
     return this;
   }
 
-  withMinimumQuantity(valueOrFactory: PropOrFactory<number>) {
-    this._minimum_quantity = valueOrFactory;
+  withMinStock(valueOrFactory: PropOrFactory<number> | PropOrFactory<Quantity>) {
+    if (typeof valueOrFactory === 'number') {
+      this._min_stock = new Quantity(valueOrFactory);
+    } else if (typeof valueOrFactory === 'function') {
+      this._min_stock = (index) => {
+        const value = valueOrFactory(index);
+        return value instanceof Quantity ? value : new Quantity(value as number);
+      };
+    } else {
+      this._min_stock = valueOrFactory as PropOrFactory<Quantity>;
+    }
     return this;
   }
 
-  withMaximumQuantity(valueOrFactory: PropOrFactory<number>) {
-    this._maximum_quantity = valueOrFactory;
+  withMaxStock(valueOrFactory: PropOrFactory<number> | PropOrFactory<Quantity>) {
+    if (typeof valueOrFactory === 'number') {
+      this._max_stock = new Quantity(valueOrFactory);
+    } else if (typeof valueOrFactory === 'function') {
+      this._max_stock = (index) => {
+        const value = valueOrFactory(index);
+        return value instanceof Quantity ? value : new Quantity(value as number);
+      };
+    } else {
+      this._max_stock = valueOrFactory as PropOrFactory<Quantity>;
+    }
     return this;
   }
 
-  withUnitCost(valueOrFactory: PropOrFactory<number>) {
-    this._unit_cost = valueOrFactory;
+  withCostPrice(valueOrFactory: PropOrFactory<number> | PropOrFactory<Money>) {
+    if (typeof valueOrFactory === 'number') {
+      this._cost_price = new Money(valueOrFactory);
+    } else if (typeof valueOrFactory === 'function') {
+      this._cost_price = (index) => {
+        const value = valueOrFactory(index);
+        return value instanceof Money ? value : new Money(value as number);
+      };
+    } else {
+      this._cost_price = valueOrFactory as PropOrFactory<Money>;
+    }
     return this;
   }
 
-  withUnitPrice(valueOrFactory: PropOrFactory<number>) {
-    this._unit_price = valueOrFactory;
+  withUnitPrice(valueOrFactory: PropOrFactory<number | null> | PropOrFactory<Money | null>) {
+    if (typeof valueOrFactory === 'number') {
+      this._unit_price = new Money(valueOrFactory);
+    } else if (valueOrFactory === null) {
+      this._unit_price = null;
+    } else if (typeof valueOrFactory === 'function') {
+      this._unit_price = (index) => {
+        const value = valueOrFactory(index);
+        if (value === null) return null;
+        return value instanceof Money ? value : new Money(value as number);
+      };
+    } else {
+      this._unit_price = valueOrFactory as PropOrFactory<Money | null>;
+    }
     return this;
   }
 
@@ -82,13 +134,37 @@ export class InventoryFakeBuilder<TBuild = any> {
     return this;
   }
 
-  withLocationCode(valueOrFactory: PropOrFactory<string | null>) {
-    this._location_code = valueOrFactory;
+  withLocation(valueOrFactory: PropOrFactory<string | null> | PropOrFactory<Location | null>) {
+    if (typeof valueOrFactory === 'string') {
+      this._location = Location.fromString(valueOrFactory);
+    } else if (valueOrFactory === null) {
+      this._location = null;
+    } else if (typeof valueOrFactory === 'function') {
+      this._location = (index) => {
+        const value = valueOrFactory(index);
+        if (value === null) return null;
+        return value instanceof Location ? value : Location.fromString(value as string);
+      };
+    } else {
+      this._location = valueOrFactory as PropOrFactory<Location | null>;
+    }
     return this;
   }
 
-  withExpiryDate(valueOrFactory: PropOrFactory<Date | null>) {
-    this._expiry_date = valueOrFactory;
+  withExpiryDate(valueOrFactory: PropOrFactory<Date | null> | PropOrFactory<ExpiryDate | null>) {
+    if (valueOrFactory instanceof Date) {
+      this._expiry_date = new ExpiryDate(valueOrFactory);
+    } else if (valueOrFactory === null) {
+      this._expiry_date = null;
+    } else if (typeof valueOrFactory === 'function') {
+      this._expiry_date = (index) => {
+        const value = valueOrFactory(index);
+        if (value === null) return null;
+        return value instanceof ExpiryDate ? value : new ExpiryDate(value as Date);
+      };
+    } else {
+      this._expiry_date = valueOrFactory as PropOrFactory<ExpiryDate | null>;
+    }
     return this;
   }
 
@@ -114,8 +190,12 @@ export class InventoryFakeBuilder<TBuild = any> {
 
   // Métodos específicos para supermercado
   withPerishableProduct() {
-    this._expiry_date = this.getExpiryDate();
-    this._batch_number = this.getBatchNumber();
+    this._expiry_date = (_index) => {
+      const days = this.chance.integer({ min: 1, max: 365 });
+      const date = new Date(Date.now() + 86400000 * days);
+      return new ExpiryDate(date);
+    };
+    this._batch_number = (_index) => `LOT-${this.chance.string({ length: 10, alpha: true, numeric: true }).toUpperCase()}`;
     return this;
   }
 
@@ -126,29 +206,27 @@ export class InventoryFakeBuilder<TBuild = any> {
   }
 
   withLowStock() {
-    this._quantity = this.chance.integer({ min: 0, max: 50 });
+    this._quantity = new Quantity(this.chance.integer({ min: 0, max: 50 }));
     return this;
   }
 
   withOutOfStock() {
-    this._quantity = 0;
+    this._quantity = new Quantity(0);
     return this;
   }
 
   withFullStock() {
-    this._quantity = this.chance.integer({ min: 800, max: 1000 });
+    this._quantity = new Quantity(this.chance.integer({ min: 800, max: 1000 }));
     return this;
   }
 
   withHighValueProduct() {
-    this._unit_cost = this.chance.floating({ min: 50, max: 500, fixed: 2 });
-    this._unit_price = this.chance.floating({ min: 100, max: 1000, fixed: 2 });
+    this._cost_price = new Money(this.chance.floating({ min: 50, max: 500, fixed: 2 }));
     return this;
   }
 
   withLowValueProduct() {
-    this._unit_cost = this.chance.floating({ min: 0.5, max: 10, fixed: 2 });
-    this._unit_price = this.chance.floating({ min: 1, max: 20, fixed: 2 });
+    this._cost_price = new Money(this.chance.floating({ min: 0.5, max: 10, fixed: 2 }));
     return this;
   }
 
@@ -163,15 +241,14 @@ export class InventoryFakeBuilder<TBuild = any> {
           product_id: this.callFactory(this._product_id, index),
           store_id: this.callFactory(this._store_id, index),
           quantity: this.callFactory(this._quantity, index),
-          minimum_quantity: this.callFactory(this._minimum_quantity, index),
-          maximum_quantity: this.callFactory(this._maximum_quantity, index),
-          unit_cost: this.callFactory(this._unit_cost, index),
+          min_stock: this.callFactory(this._min_stock, index),
+          max_stock: this.callFactory(this._max_stock, index),
+          cost_price: this.callFactory(this._cost_price, index),
           unit_price: this.callFactory(this._unit_price, index),
           supplier_id: this.callFactory(this._supplier_id, index),
-          location_code: this.callFactory(this._location_code, index),
+          location: this.callFactory(this._location, index),
           expiry_date: this.callFactory(this._expiry_date, index),
           batch_number: this.callFactory(this._batch_number, index),
-          is_active: this.callFactory(this._is_active, index),
           ...(this._created_at && {
             created_at: this.callFactory(this._created_at, index),
           }),
@@ -198,16 +275,16 @@ export class InventoryFakeBuilder<TBuild = any> {
     return this.getValue('quantity');
   }
 
-  get minimum_quantity() {
-    return this.getValue('minimum_quantity');
+  get min_stock() {
+    return this.getValue('min_stock');
   }
 
-  get maximum_quantity() {
-    return this.getValue('maximum_quantity');
+  get max_stock() {
+    return this.getValue('max_stock');
   }
 
-  get unit_cost() {
-    return this.getValue('unit_cost');
+  get cost_price() {
+    return this.getValue('cost_price');
   }
 
   get unit_price() {
@@ -218,8 +295,8 @@ export class InventoryFakeBuilder<TBuild = any> {
     return this.getValue('supplier_id');
   }
 
-  get location_code() {
-    return this.getValue('location_code');
+  get location() {
+    return this.getValue('location');
   }
 
   get expiry_date() {
@@ -256,7 +333,7 @@ export class InventoryFakeBuilder<TBuild = any> {
   }
 
   // Dados específicos do domínio de supermercado
-  private getLocationCode(): string {
+  private getLocation(): Location {
     const sections = ['A', 'B', 'C', 'D', 'E', 'F'];
     const aisles = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10'];
     const shelves = ['01', '02', '03', '04', '05'];
@@ -265,16 +342,16 @@ export class InventoryFakeBuilder<TBuild = any> {
     const aisle = this.chance.pickone(aisles);
     const shelf = this.chance.pickone(shelves);
     
-    return `${section}-${aisle}-${shelf}`;
+    return Location.fromString(`${section}-${aisle}-${shelf}`);
   }
 
-  private getExpiryDate(): Date | null {
+  private getExpiryDate(): ExpiryDate | null {
     // 50% de chance de ser perecível
     if (this.chance.bool({ likelihood: 50 })) {
       const daysFromNow = this.chance.integer({ min: 1, max: 365 });
       const expiryDate = new Date();
       expiryDate.setDate(expiryDate.getDate() + daysFromNow);
-      return expiryDate;
+      return new ExpiryDate(expiryDate);
     }
     return null;
   }
@@ -291,4 +368,4 @@ export class InventoryFakeBuilder<TBuild = any> {
     }
     return null;
   }
-} 
+}

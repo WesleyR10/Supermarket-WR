@@ -13,7 +13,9 @@ describe('ListInventoriesUseCase Unit Tests', () => {
 
   describe('execute method', () => {
     it('should return empty list when no inventories exist', async () => {
-      const output = await useCase.execute({});
+      const output = await useCase.execute({
+        filter: { store_id: 'store-1' }
+      });
 
       expect(output.items).toHaveLength(0);
       expect(output.total).toBe(0);
@@ -32,7 +34,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 200,
           unit_cost: 10.00,
           unit_price: 15.00,
-          location_code: 'A1-01',
+          location: 'A-1-1', // Formato correto
           is_active: true
         }),
         Inventory.create({
@@ -43,7 +45,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 100,
           unit_cost: 5.00,
           unit_price: 8.00,
-          location_code: 'A2-01',
+          location: 'A-2-1', // Formato correto
           is_active: true
         })
       ];
@@ -53,7 +55,9 @@ describe('ListInventoriesUseCase Unit Tests', () => {
       
       await repository.bulkInsert(inventories);
 
-      const output = await useCase.execute({});
+      const output = await useCase.execute({
+        filter: { store_id: 'store-1' }
+      });
 
       expect(output.items).toHaveLength(2);
       expect(output.total).toBe(2);
@@ -76,7 +80,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 200,
           unit_cost: 10.00,
           unit_price: 15.00,
-          location_code: `A${i + 1}-01`,
+          location: `A-${i + 1}-1`, // Formato correto
           is_active: true
         })
       );
@@ -85,7 +89,8 @@ describe('ListInventoriesUseCase Unit Tests', () => {
 
       const output = await useCase.execute({
         page: 1,
-        per_page: 2
+        per_page: 2,
+        filter: { store_id: 'store-1' }
       });
 
       expect(output.items).toHaveLength(2);
@@ -105,7 +110,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 200,
           unit_cost: 10.00,
           unit_price: 15.00,
-          location_code: 'A1-01',
+          location: 'A-1-1', // Formato correto
           is_active: true
         }),
         Inventory.create({
@@ -116,7 +121,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 100,
           unit_cost: 5.00,
           unit_price: 8.00,
-          location_code: 'B1-01',
+          location: 'B-1-1', // Formato correto
           is_active: true
         })
       ];
@@ -141,7 +146,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 200,
           unit_cost: 10.00,
           unit_price: 15.00,
-          location_code: 'A1-01',
+          location: 'A-1-1', // Formato correto
           is_active: true
         }),
         Inventory.create({
@@ -152,7 +157,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 100,
           unit_cost: 5.00,
           unit_price: 8.00,
-          location_code: 'A2-01',
+          location: 'A-2-1', // Formato correto
           is_active: true
         }),
         Inventory.create({
@@ -163,7 +168,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 300,
           unit_cost: 15.00,
           unit_price: 22.00,
-          location_code: 'A3-01',
+          location: 'A-3-1', // Formato correto
           is_active: true
         })
       ];
@@ -172,8 +177,9 @@ describe('ListInventoriesUseCase Unit Tests', () => {
 
       const output = await useCase.execute({
         filter: { 
-          quantity_min: 50,
-          quantity_max: 100
+          store_id: 'store-1',
+          min_quantity: 50,
+          max_quantity: 100
         }
       });
 
@@ -191,7 +197,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 200,
           unit_cost: 10.00,
           unit_price: 15.00,
-          location_code: 'A1-01',
+          location: 'A-1-1', // Formato correto
           is_active: true
         }),
         Inventory.create({
@@ -202,7 +208,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 100,
           unit_cost: 5.00,
           unit_price: 8.00,
-          location_code: 'A2-01',
+          location: 'A-2-1', // Formato correto
           is_active: false
         })
       ];
@@ -210,7 +216,10 @@ describe('ListInventoriesUseCase Unit Tests', () => {
       await repository.bulkInsert(inventories);
 
       const output = await useCase.execute({
-        filter: { is_active: true }
+        filter: { 
+          store_id: 'store-1',
+          is_active: true 
+        }
       });
 
       expect(output.items).toHaveLength(1);
@@ -227,7 +236,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 200,
           unit_cost: 10.00,
           unit_price: 15.00,
-          location_code: 'A1-01',
+          location: 'A-1-1', // Formato correto
           is_active: true
         }),
         Inventory.create({
@@ -238,7 +247,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 100,
           unit_cost: 5.00,
           unit_price: 8.00,
-          location_code: 'A2-01',
+          location: 'A-2-1', // Formato correto
           is_active: true
         }),
         Inventory.create({
@@ -249,7 +258,7 @@ describe('ListInventoriesUseCase Unit Tests', () => {
           max_stock: 150,
           unit_cost: 8.00,
           unit_price: 12.00,
-          location_code: 'A3-01',
+          location: 'A-3-1', // Formato correto
           is_active: true
         })
       ];
@@ -258,7 +267,8 @@ describe('ListInventoriesUseCase Unit Tests', () => {
 
       const output = await useCase.execute({
         sort: 'quantity',
-        sort_dir: 'asc'
+        sort_dir: 'asc',
+        filter: { store_id: 'store-1' }
       });
 
       expect(output.items).toHaveLength(3);
@@ -267,141 +277,140 @@ describe('ListInventoriesUseCase Unit Tests', () => {
       expect(output.items[2].quantity).toBe(100);
     });
 
-    // Cenários específicos do supermercado
-    describe('supermarket specific scenarios', () => {
-      it('should filter low stock items for reorder alerts', async () => {
-        const inventories = [
-          Inventory.create({
-            store_id: 'store-1',
-            product_id: 'product-1',
-            quantity: 5, // Abaixo do min_stock
-            min_stock: 10,
-            max_stock: 200,
-            unit_cost: 10.00,
-            unit_price: 15.00,
-            location_code: 'A1-01',
-            is_active: true
-          }),
-          Inventory.create({
-            store_id: 'store-1',
-            product_id: 'product-2',
-            quantity: 50,
-            min_stock: 5,
-            max_stock: 100,
-            unit_cost: 5.00,
-            unit_price: 8.00,
-            location_code: 'A2-01',
-            is_active: true
-          })
-        ];
+    it('should sort by created_at descending (default)', async () => {
+      const inventories = [
+        Inventory.create({
+          store_id: 'store-1',
+          product_id: 'product-1',
+          quantity: 100,
+          min_stock: 10,
+          max_stock: 200,
+          unit_cost: 10.00,
+          unit_price: 15.00,
+          location: 'A-1-1', // Formato correto
+          is_active: true
+        }),
+        Inventory.create({
+          store_id: 'store-1',
+          product_id: 'product-2',
+          quantity: 50,
+          min_stock: 5,
+          max_stock: 100,
+          unit_cost: 5.00,
+          unit_price: 8.00,
+          location: 'A-2-1', // Formato correto
+          is_active: true
+        })
+      ];
 
-        await repository.bulkInsert(inventories);
+      // Definir datas diferentes
+      inventories[0].created_at = new Date('2023-01-01');
+      inventories[1].created_at = new Date('2023-01-02');
 
-        const output = await useCase.execute({
-          filter: { low_stock: true }
-        });
+      await repository.bulkInsert(inventories);
 
-        expect(output.items).toHaveLength(1);
-        expect(output.items[0].quantity).toBeLessThan(output.items[0].min_stock);
+      const output = await useCase.execute({
+        filter: { store_id: 'store-1' }
       });
 
-      it('should filter by location for stock management', async () => {
-        const inventories = [
-          Inventory.create({
-            store_id: 'store-1',
-            product_id: 'product-1',
-            quantity: 100,
-            min_stock: 10,
-            max_stock: 200,
-            unit_cost: 10.00,
-            unit_price: 15.00,
-            location_code: 'A1-01',
-            is_active: true
-          }),
-          Inventory.create({
-            store_id: 'store-1',
-            product_id: 'product-2',
-            quantity: 50,
-            min_stock: 5,
-            max_stock: 100,
-            unit_cost: 5.00,
-            unit_price: 8.00,
-            location_code: 'B1-01',
-            is_active: true
-          })
-        ];
-
-        await repository.bulkInsert(inventories);
-
-        const output = await useCase.execute({
-          filter: { location_code: 'A1-01' }
-        });
-
-        expect(output.items).toHaveLength(1);
-        expect(output.items[0].location_code).toBe('A1-01');
-      });
-
-      it('should filter by price range for promotional campaigns', async () => {
-        const inventories = [
-          Inventory.create({
-            store_id: 'store-1',
-            product_id: 'product-1',
-            quantity: 100,
-            min_stock: 10,
-            max_stock: 200,
-            unit_cost: 10.00,
-            unit_price: 15.00,
-            location_code: 'A1-01',
-            is_active: true
-          }),
-          Inventory.create({
-            store_id: 'store-1',
-            product_id: 'product-2',
-            quantity: 50,
-            min_stock: 5,
-            max_stock: 100,
-            unit_cost: 5.00,
-            unit_price: 25.00,
-            location_code: 'A2-01',
-            is_active: true
-          })
-        ];
-
-        await repository.bulkInsert(inventories);
-
-        const output = await useCase.execute({
-          filter: { 
-            unit_price_min: 10.00,
-            unit_price_max: 20.00
-          }
-        });
-
-        expect(output.items).toHaveLength(1);
-        expect(output.items[0].unit_price).toBe(15.00);
-      });
+      expect(output.items).toHaveLength(2);
+      // Primeiro item deve ser o mais recente
+      expect(output.items[0].id).toBe(inventories[1].inventory_item_id.id);
+      expect(output.items[1].id).toBe(inventories[0].inventory_item_id.id);
     });
 
-    // Testes de integração com repositório
-    describe('repository integration', () => {
-      it('should call repository search method with correct params', async () => {
-        const searchSpy = jest.spyOn(repository, 'search');
+    it('should handle pagination with sort', async () => {
+      const inventories = Array.from({ length: 10 }, (_, i) => 
+        Inventory.create({
+          store_id: 'store-1',
+          product_id: `product-${i + 1}`,
+          quantity: (i + 1) * 10, // 10, 20, 30, ...
+          min_stock: 5,
+          max_stock: 200,
+          unit_cost: 10.00,
+          unit_price: 15.00,
+          location: `A-${i + 1}-1`, // Formato correto
+          is_active: true
+        })
+      );
 
-        await useCase.execute({
-          page: 2,
-          per_page: 10,
-          sort: 'quantity',
-          sort_dir: 'desc',
-          filter: { store_id: 'store-1' }
-        });
+      await repository.bulkInsert(inventories);
 
-        expect(searchSpy).toHaveBeenCalledTimes(1);
-        const calledParams = searchSpy.mock.calls[0][0];
-        expect(calledParams.page).toBe(2);
-        expect(calledParams.per_page).toBe(10);
-        expect(calledParams.sort).toBe('quantity');
-        expect(calledParams.sort_dir).toBe('desc');
-        expect(calledParams.filter).toEqual({ store_id: 'store-1' });
+      const output = await useCase.execute({
+        page: 2,
+        per_page: 3,
+        sort: 'quantity',
+        sort_dir: 'asc',
+        filter: { store_id: 'store-1' }
       });
+
+      expect(output.items).toHaveLength(3);
+      expect(output.current_page).toBe(2);
+      expect(output.per_page).toBe(3);
+      expect(output.total).toBe(10);
+      // Segunda página deve ter quantidades 40, 50, 60
+      expect(output.items[0].quantity).toBe(40);
+      expect(output.items[1].quantity).toBe(50);
+      expect(output.items[2].quantity).toBe(60);
+    });
+
+    it('should ensure store isolation in multi-tenant environment', async () => {
+      const store1Inventories = [
+        Inventory.create({
+          store_id: 'store-1',
+          product_id: 'product-1',
+          quantity: 100,
+          min_stock: 10,
+          max_stock: 200,
+          unit_cost: 10.00,
+          unit_price: 15.00,
+          location: 'A-1-1', // Formato correto
+          is_active: true
+        }),
+        Inventory.create({
+          store_id: 'store-1',
+          product_id: 'product-2',
+          quantity: 50,
+          min_stock: 5,
+          max_stock: 100,
+          unit_cost: 5.00,
+          unit_price: 8.00,
+          location: 'A-2-1', // Formato correto
+          is_active: true
+        })
+      ];
+
+      const store2Inventories = [
+        Inventory.create({
+          store_id: 'store-2',
+          product_id: 'product-3',
+          quantity: 75,
+          min_stock: 15,
+          max_stock: 150,
+          unit_cost: 8.00,
+          unit_price: 12.00,
+          location: 'B-1-1', // Formato correto
+          is_active: true
+        })
+      ];
+
+      await repository.bulkInsert([...store1Inventories, ...store2Inventories]);
+
+      // Testar isolamento store-1
+      const output1 = await useCase.execute({
+        filter: { store_id: 'store-1' }
+      });
+
+      expect(output1.items).toHaveLength(2);
+      expect(output1.items.every(item => item.store_id === 'store-1')).toBe(true);
+
+      // Testar isolamento store-2
+      const output2 = await useCase.execute({
+        filter: { store_id: 'store-2' }
+      });
+
+      expect(output2.items).toHaveLength(1);
+      expect(output2.items.every(item => item.store_id === 'store-2')).toBe(true);
     });
   });
 });

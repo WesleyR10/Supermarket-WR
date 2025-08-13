@@ -197,6 +197,31 @@ export class Location extends ValueObject {
   static createCheckout(position: string): Location {
     return new Location({ aisle: 'CHECKOUT', section: '1', shelf: '1', position });
   }
+
+  // Métodos simplificados para supermercados grandes
+  static createSimpleFreezer(number: string): Location {
+    return new Location({ aisle: 'FREEZER', section: number, shelf: '1' });
+  }
+
+  static createSimpleFridge(number: string): Location {
+    return new Location({ aisle: 'FRIDGE', section: number, shelf: '1' });
+  }
+
+  static createSimpleStorage(number: string): Location {
+    return new Location({ aisle: 'STORAGE', section: number, shelf: '1' });
+  }
+
+  static createSimpleDryGoods(number: string): Location {
+    return new Location({ aisle: 'DRY', section: number, shelf: '1' });
+  }
+
+  static createSimpleBakery(number: string): Location {
+    return new Location({ aisle: 'BAKERY', section: number, shelf: '1' });
+  }
+
+  static createSimpleDeli(number: string): Location {
+    return new Location({ aisle: 'DELI', section: number, shelf: '1' });
+  }
 }
 
 export interface LocationProps {

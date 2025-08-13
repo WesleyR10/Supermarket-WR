@@ -11,7 +11,7 @@ import {
 export type UpdateInventoryInputConstructorProps = {
   id: string;
   product_id?: string;
-  store_id?: string;
+  store_id: string;
   quantity?: number;
   minimum_quantity?: number;
   maximum_quantity?: number;
@@ -30,12 +30,12 @@ export class UpdateInventoryInput {
   id: string;
 
   @IsString()
-  @IsOptional()
-  product_id?: string;
+  @IsNotEmpty()
+  store_id: string;
 
   @IsString()
   @IsOptional()
-  store_id?: string;
+  product_id?: string;
 
   @IsNumber()
   @IsOptional()
@@ -99,4 +99,4 @@ export class ValidateUpdateInventoryInput {
   static validate(input: UpdateInventoryInput) {
     return validateSync(input);
   }
-} 
+}

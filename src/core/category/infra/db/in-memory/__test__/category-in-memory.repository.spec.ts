@@ -1,6 +1,6 @@
-import { CategoryInMemoryRepository } from './category-in-memory.repository';
-import { Category, CategoryId } from '../../../domain/category.aggregate';
-import { CategoryFilter } from '../../../domain/repositories/category.repository.interface';
+import { CategoryInMemoryRepository } from '../category-in-memory.repository';
+import { Category, CategoryId } from '../../../../domain/category.aggregate';
+import { CategoryFilter } from '../../../../domain/repositories/category.repository.interface';
 
 describe('CategoryInMemoryRepository', () => {
   let repository: CategoryInMemoryRepository;
