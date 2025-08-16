@@ -6,11 +6,12 @@ import {
   Min,
   Max,
   validateSync,
-  IsUUID,
+  IsPositive,
 } from 'class-validator';
 
 export type AddItemToSaleInputConstructorProps = {
   sale_id: string;
+  store_id: string;
   product_id: string;
   quantity: number;
   unit_price: number;
@@ -20,21 +21,24 @@ export type AddItemToSaleInputConstructorProps = {
 export class AddItemToSaleInput {
   @IsString()
   @IsNotEmpty()
-  @IsUUID()
   sale_id: string;
 
   @IsString()
   @IsNotEmpty()
-  @IsUUID() 
+  store_id: string;
+
+  @IsString()
+  @IsNotEmpty()
   product_id: string;
 
   @IsNumber()
-  @Min(0.01)
+  @IsPositive()
   quantity: number;
 
   @IsNumber()
-  @Min(0.01)
-  unit_price: number;
+  @IsOptional()
+  @IsPositive()
+  unit_price?: number;
 
   @IsNumber()
   @IsOptional()
@@ -45,6 +49,7 @@ export class AddItemToSaleInput {
   constructor(props: AddItemToSaleInputConstructorProps) {
     if (!props) return;
     this.sale_id = props.sale_id;
+    this.store_id = props.store_id;
     this.product_id = props.product_id;
     this.quantity = props.quantity;
     this.unit_price = props.unit_price;

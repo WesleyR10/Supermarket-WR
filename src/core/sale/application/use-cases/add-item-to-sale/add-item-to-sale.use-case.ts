@@ -23,6 +23,13 @@ export class AddItemToSaleUseCase
       throw new NotFoundError(input.sale_id, Sale);
     }
 
+    // ✅ Multi-tenant: garantir que a venda pertence à store_id informada
+    if (sale.store_id !== input.store_id) {
+      throw new EntityValidationError([
+        { store_id: ['Sale does not belong to this store'] },
+      ]);
+    }
+
     // ✅ Validações de regras de negócio usando Notification
     const notification = new Notification();
     if (sale.sale_status !== SaleStatus.PENDING) {
@@ -37,7 +44,7 @@ export class AddItemToSaleUseCase
     sale.addItem({
       product_id: input.product_id,
       quantity: input.quantity,
-      unit_price: input.unit_price,
+      unit_price: input.unit_price || 0,
       discount_percentage: input.discount_percentage || 0
     });
 

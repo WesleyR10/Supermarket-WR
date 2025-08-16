@@ -9,35 +9,37 @@ import {
   validateSync,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { PaymentMethod, SaleStatus } from '../../../domain/sale.aggregate';
+import { PaymentMethod } from '../../../domain/sale.aggregate';
 
 export class SaleItemUpdateInput {
   @IsString()
   @IsNotEmpty()
   product_id: string;
 
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 3, allowInfinity: false, allowNaN: false })
+  @Type(() => Number)
   @IsOptional()
   quantity?: number;
 
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2, allowInfinity: false, allowNaN: false })
+  @Type(() => Number)
   @IsOptional()
   unit_price?: number;
 
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2, allowInfinity: false, allowNaN: false })
   @IsOptional()
+  @Type(() => Number)
   discount_percentage?: number;
 }
 
 export type UpdateSaleInputConstructorProps = {
   id: string;
+  store_id: string;
   customer_id?: string | null;
   cashier_id?: string;
-  store_id?: string;
   register_number?: number;
   items?: SaleItemUpdateInput[];
   payment_method?: PaymentMethod;
-  sale_status?: SaleStatus;
   discount_amount?: number;
 };
 
@@ -47,6 +49,10 @@ export class UpdateSaleInput {
   id: string;
 
   @IsString()
+  @IsNotEmpty()
+  store_id: string;
+
+  @IsString()
   @IsOptional()
   customer_id?: string | null;
 
@@ -54,12 +60,9 @@ export class UpdateSaleInput {
   @IsOptional()
   cashier_id?: string;
 
-  @IsString()
+  @IsNumber({ allowInfinity: false, allowNaN: false })
   @IsOptional()
-  store_id?: string;
-
-  @IsNumber()
-  @IsOptional()
+  @Type(() => Number)
   register_number?: number;
 
   @IsArray()
@@ -72,24 +75,20 @@ export class UpdateSaleInput {
   @IsOptional()
   payment_method?: PaymentMethod;
 
-  @IsEnum(SaleStatus)
+  @IsNumber({ maxDecimalPlaces: 2, allowInfinity: false, allowNaN: false })
   @IsOptional()
-  sale_status?: SaleStatus;
-
-  @IsNumber()
-  @IsOptional()
+  @Type(() => Number)
   discount_amount?: number;
 
   constructor(props: UpdateSaleInputConstructorProps) {
     if (!props) return;
     this.id = props.id;
+    this.store_id = props.store_id;
     this.customer_id = props.customer_id;
     this.cashier_id = props.cashier_id;
-    this.store_id = props.store_id;
     this.register_number = props.register_number;
     this.items = props.items;
     this.payment_method = props.payment_method;
-    this.sale_status = props.sale_status;
     this.discount_amount = props.discount_amount;
   }
 }
@@ -98,4 +97,4 @@ export class ValidateUpdateSaleInput {
   static validate(input: UpdateSaleInput) {
     return validateSync(input);
   }
-} 
+}

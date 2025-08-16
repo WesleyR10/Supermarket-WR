@@ -22,6 +22,8 @@ export type SaleOutput = {
   payment_method: string;
   sale_status: string;
   items: SaleItemOutput[];
+  received_amount?: number;
+  change_amount?: number;
   register_number: number;
   sale_date: Date;
   created_at: Date;
@@ -30,12 +32,25 @@ export type SaleOutput = {
 
 export class SaleOutputMapper {
   static toOutput(entity: Sale): SaleOutput {
-    const { sale_id, ...otherProps } = entity.toJSON();
-    return {
+    const { sale_id, received_amount, change_amount, ...otherProps } = entity.toJSON();
+    
+    const output: SaleOutput = {
       id: sale_id,
       ...otherProps,
       subtotal_with_discount: entity.getSubtotalWithDiscount(), // Valor dos itens com desconto
       final_total: entity.getFinalTotal(), // Valor final com desconto e imposto
     };
+    
+    // Incluir received_amount apenas se definido
+    if (received_amount !== undefined) {
+      output.received_amount = received_amount;
+    }
+    
+    // Incluir change_amount apenas se definido
+    if (change_amount !== undefined) {
+      output.change_amount = change_amount;
+    }
+    
+    return output;
   }
 }

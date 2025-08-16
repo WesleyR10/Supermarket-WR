@@ -1,4 +1,4 @@
-import { Min, Max, ArrayMinSize, ArrayMaxSize, ValidateNested, IsEnum } from 'class-validator';
+import { Min, Max, ArrayMinSize, ArrayMaxSize, ValidateNested, IsEnum, IsNotEmpty, IsString } from 'class-validator';
 import { Sale } from './sale.aggregate';
 import { ClassValidatorFields } from '../../shared/domain/validators/class-validator-fields';
 import { Notification } from '../../shared/domain/validators/notification';
@@ -36,6 +36,14 @@ enum PaymentMethod {
 }
 
 export class SaleRules {
+  @IsNotEmpty({ groups: ['store_id'] })
+  @IsString({ groups: ['store_id'] })
+  store_id: string;
+
+  @IsNotEmpty({ groups: ['cashier_id'] })
+  @IsString({ groups: ['cashier_id'] })
+  cashier_id: string;
+
   @Min(0, { groups: ['total_amount'] })
   @Max(100000, { groups: ['total_amount'] })
   total_amount: number;
@@ -44,7 +52,7 @@ export class SaleRules {
   discount_amount?: number;
 
   @Min(0, { groups: ['tax_amount'] })
-  @Max(100, { groups: ['tax_amount'] })
+  @Max(100000, { groups: ['tax_amount'] })
   tax_amount?: number;
 
   @Min(0, { groups: ['tax_rate'] })
@@ -63,6 +71,8 @@ export class SaleRules {
   register_number: number;
 
   constructor(sale: Sale) {
+    this.store_id = sale.store_id;
+    this.cashier_id = sale.cashier_id;
     this.total_amount = sale.total_amount;
     this.discount_amount = sale.discount_amount;
     this.tax_amount = sale.tax_amount;
@@ -76,6 +86,8 @@ export class SaleRules {
 export class SaleValidator extends ClassValidatorFields {
   validate(notification: Notification, data: any, fields?: string[]): boolean {
     const newFields = fields?.length ? fields : [
+      'store_id',
+      'cashier_id',
       'total_amount',
       'discount_amount',
       'tax_amount',
@@ -84,9 +96,11 @@ export class SaleValidator extends ClassValidatorFields {
       'register_number'
     ];
     
-    // ✅ Validação adicional para items se necessário
     if (fields?.includes('items') && data.items) {
       for (const item of data.items) {
+        if (!item.product_id || String(item.product_id).trim() === '') {
+          notification.addError('product_id should not be empty', 'items');
+        }
         if (item.quantity <= 0) {
           notification.addError('quantity must be greater than 0', 'items');
         }

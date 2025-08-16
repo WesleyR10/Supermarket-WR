@@ -30,6 +30,7 @@ describe('AddItemToSaleUseCase Unit Tests', () => {
     it('should add item to sale successfully', async () => {
       const input = new AddItemToSaleInput({
         sale_id: sale.sale_id.id,
+        store_id: 'store-123',
         product_id: 'product-123',
         quantity: 2,
         unit_price: 10.50,
@@ -52,6 +53,7 @@ describe('AddItemToSaleUseCase Unit Tests', () => {
     it('should add item without discount', async () => {
       const input = new AddItemToSaleInput({
         sale_id: sale.sale_id.id,
+        store_id: 'store-123',
         product_id: 'product-456',
         quantity: 1,
         unit_price: 25.00
@@ -72,6 +74,7 @@ describe('AddItemToSaleUseCase Unit Tests', () => {
     it('should throw InvalidUuidError when sale_id is invalid', async () => {
       const input = new AddItemToSaleInput({
         sale_id: 'invalid-uuid',
+        store_id: 'store-123',
         product_id: 'product-123',
         quantity: 1,
         unit_price: 10.00
@@ -84,6 +87,7 @@ describe('AddItemToSaleUseCase Unit Tests', () => {
       const validUuid = '550e8400-e29b-41d4-a716-446655440000';
       const input = new AddItemToSaleInput({
         sale_id: validUuid,
+        store_id: 'store-123',
         product_id: 'product-123',
         quantity: 1,
         unit_price: 10.00
@@ -98,6 +102,7 @@ describe('AddItemToSaleUseCase Unit Tests', () => {
 
       const input = new AddItemToSaleInput({
         sale_id: sale.sale_id.id,
+        store_id: 'store-123',
         product_id: 'product-123',
         quantity: 1,
         unit_price: 10.00
@@ -111,9 +116,10 @@ describe('AddItemToSaleUseCase Unit Tests', () => {
       it('should update sale in repository', async () => {
         const input = new AddItemToSaleInput({
           sale_id: sale.sale_id.id,
+          store_id: 'store-123',
           product_id: 'product-123',
           quantity: 1,
-          unit_price: 10.00
+          unit_price: 100.00
         });
 
         await useCase.execute(input);
@@ -129,6 +135,7 @@ describe('AddItemToSaleUseCase Unit Tests', () => {
       it('should handle multiple items correctly', async () => {
         const input1 = new AddItemToSaleInput({
           sale_id: sale.sale_id.id,
+          store_id: 'store-123',
           product_id: 'product-123',
           quantity: 2,
           unit_price: 5.00
@@ -136,6 +143,7 @@ describe('AddItemToSaleUseCase Unit Tests', () => {
 
         const input2 = new AddItemToSaleInput({
           sale_id: sale.sale_id.id,
+          store_id: 'store-123',
           product_id: 'product-456',
           quantity: 1,
           unit_price: 15.00
@@ -151,6 +159,7 @@ describe('AddItemToSaleUseCase Unit Tests', () => {
       it('should handle fractional quantities for weighted products', async () => {
         const input = new AddItemToSaleInput({
           sale_id: sale.sale_id.id,
+          store_id: 'store-123',
           product_id: 'product-weight',
           quantity: 1.5, // 1.5kg
           unit_price: 12.00 // por kg
@@ -168,6 +177,7 @@ describe('AddItemToSaleUseCase Unit Tests', () => {
 
         const input = new AddItemToSaleInput({
           sale_id: sale.sale_id.id,
+          store_id: 'store-123',
           product_id: 'product-123',
           quantity: 1,
           unit_price: 100.00
@@ -180,5 +190,17 @@ describe('AddItemToSaleUseCase Unit Tests', () => {
         expect(output.final_total).toBe(118); // total + tax
       });
     });
+  });
+
+  it('should throw EntityValidationError when input.store_id differs from sale.store_id', async () => {
+    const input = new AddItemToSaleInput({
+      sale_id: sale.sale_id.id,
+      store_id: 'another-store',
+      product_id: 'product-xyz',
+      quantity: 1,
+      unit_price: 10.00
+    });
+
+    await expect(useCase.execute(input)).rejects.toThrow(EntityValidationError);
   });
 });

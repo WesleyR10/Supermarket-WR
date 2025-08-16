@@ -23,6 +23,13 @@ export class CancelSaleUseCase
       throw new NotFoundError(input.sale_id, Sale);
     }
 
+    // ✅ Multi-tenant: garantir que a venda pertence à store_id informada
+    if (sale.store_id !== input.store_id) {
+      throw new EntityValidationError([
+        { store_id: ['Sale does not belong to this store'] },
+      ]);
+    }
+
     // ✅ Validações de regras de negócio usando Notification
     const notification = new Notification();
     if (!sale.canBeCancelled()) {

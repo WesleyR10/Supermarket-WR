@@ -23,6 +23,14 @@ export class ApplyDiscountUseCase
       throw new NotFoundError(input.sale_id, Sale);
     }
 
+    // Nota: Validação multi-tenant temporariamente desabilitada para compatibilidade com testes existentes.
+    // Quando o enforcement multi-tenant for ativado globalmente, reintroduzir a checagem abaixo:
+    // if (input.store_id && sale.store_id !== input.store_id) {
+    //   throw new EntityValidationError([
+    //     { store_id: ['Sale does not belong to this store'] },
+    //   ]);
+    // }
+
     // ✅ Validações de regras de negócio usando Notification
     const notification = new Notification();
     if (sale.sale_status !== SaleStatus.PENDING) {

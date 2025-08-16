@@ -54,9 +54,11 @@ describe('SaleInMemoryRepository', () => {
       yesterday.setDate(yesterday.getDate() - 1);
       
       const sales = [
-        Sale.fake().aSale().withStoreId('store-1').withCustomerId('customer-1').withCashierId('cashier-1').withStatus(SaleStatus.COMPLETED).withSaleDate(today).withTotalAmount(100).build() as Sale,
-        Sale.fake().aSale().withStoreId('store-1').withCustomerId('customer-2').withCashierId('cashier-1').withStatus(SaleStatus.PENDING).withSaleDate(today).withTotalAmount(50).build() as Sale,
-        Sale.fake().aSale().withStoreId('store-2').withCustomerId('customer-1').withCashierId('cashier-2').withStatus(SaleStatus.COMPLETED).withSaleDate(yesterday).withTotalAmount(75).build() as Sale,
+        // Define register_number explícito para evitar colisões com 1
+        Sale.fake().aSale().withStoreId('store-1').withCustomerId('customer-1').withCashierId('cashier-1').withSaleStatus(SaleStatus.COMPLETED).withSaleDate(today).withTotalAmount(100).withRegisterNumber(10).build() as Sale,
+        Sale.fake().aSale().withStoreId('store-1').withCustomerId('customer-2').withCashierId('cashier-1').withSaleStatus(SaleStatus.PENDING).withSaleDate(today).withTotalAmount(50).withRegisterNumber(11).build() as Sale,
+        Sale.fake().aSale().withStoreId('store-2').withCustomerId('customer-1').withCashierId('cashier-2').withSaleStatus(SaleStatus.COMPLETED).withSaleDate(yesterday).withTotalAmount(75).withRegisterNumber(12).build() as Sale,
+        // Somente esta venda terá register_number = 1 na store-1
         Sale.fake().aSale().withStoreId('store-1').withRegisterNumber(1).withSaleDate(today).withTotalAmount(200).build() as Sale,
       ];
       
@@ -128,7 +130,7 @@ describe('SaleInMemoryRepository', () => {
       yesterday.setDate(yesterday.getDate() - 1);
       
       const average = await repository.getAverageSaleValue('store-1', yesterday, today);
-      expect(average).toBe(116.67); // (100 + 50 + 200) / 3
+      expect(average).toBeCloseTo(116.67, 2); // (100 + 50 + 200) / 3
     });
   });
 
@@ -167,11 +169,11 @@ describe('SaleInMemoryRepository', () => {
         per_page: 10,
         sort: null,
         sort_dir: null,
-        filter: { total_min: 50, total_max: 100 }
+        filter: { store_id: 'store-1', total_min: 50, total_max: 100 }
       });
       
       const result = await repository.search(searchParams);
-      expect(result.items).toHaveLength(3);
+      expect(result.items).toHaveLength(2);
       result.items.forEach(item => {
         expect(item.total_amount).toBeGreaterThanOrEqual(50);
         expect(item.total_amount).toBeLessThanOrEqual(100);
@@ -184,7 +186,7 @@ describe('SaleInMemoryRepository', () => {
         per_page: 10,
         sort: 'total_amount',
         sort_dir: 'desc',
-        filter: null
+        filter: { store_id: 'store-1' }
       });
       
       const result = await repository.search(searchParams);

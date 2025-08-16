@@ -37,6 +37,7 @@ describe('CancelSaleUseCase Unit Tests', () => {
     it('should cancel sale successfully', async () => {
       const input = new CancelSaleInput({
         sale_id: sale.sale_id.id,
+        store_id: 'store-123',
         reason: 'Customer request'
       });
 
@@ -49,6 +50,7 @@ describe('CancelSaleUseCase Unit Tests', () => {
     it('should throw InvalidUuidError when sale_id is invalid', async () => {
       const input = new CancelSaleInput({
         sale_id: 'invalid-uuid',
+        store_id: 'store-123',
         reason: 'Test'
       });
 
@@ -59,6 +61,7 @@ describe('CancelSaleUseCase Unit Tests', () => {
       const validUuid = '550e8400-e29b-41d4-a716-446655440000';
       const input = new CancelSaleInput({
         sale_id: validUuid,
+        store_id: 'store-123',
         reason: 'Test'
       });
 
@@ -71,6 +74,17 @@ describe('CancelSaleUseCase Unit Tests', () => {
 
       const input = new CancelSaleInput({
         sale_id: sale.sale_id.id,
+        store_id: 'store-123',
+        reason: 'Test'
+      });
+
+      await expect(useCase.execute(input)).rejects.toThrow(EntityValidationError);
+    });
+
+    it('should throw EntityValidationError when input.store_id differs from sale.store_id', async () => {
+      const input = new CancelSaleInput({
+        sale_id: sale.sale_id.id,
+        store_id: 'another-store',
         reason: 'Test'
       });
 
@@ -82,6 +96,7 @@ describe('CancelSaleUseCase Unit Tests', () => {
       it('should update sale status in repository', async () => {
         const input = new CancelSaleInput({
           sale_id: sale.sale_id.id,
+          store_id: 'store-123',
           reason: 'Customer request'
         });
 
@@ -97,6 +112,7 @@ describe('CancelSaleUseCase Unit Tests', () => {
       it('should handle manager cancellation', async () => {
         const input = new CancelSaleInput({
           sale_id: sale.sale_id.id,
+          store_id: 'store-123',
           reason: 'Manager authorization - pricing error'
         });
 
@@ -108,6 +124,7 @@ describe('CancelSaleUseCase Unit Tests', () => {
       it('should handle system error cancellation', async () => {
         const input = new CancelSaleInput({
           sale_id: sale.sale_id.id,
+          store_id: 'store-123',
           reason: 'System error - payment processing failed'
         });
 
@@ -119,6 +136,7 @@ describe('CancelSaleUseCase Unit Tests', () => {
       it('should handle customer request cancellation', async () => {
         const input = new CancelSaleInput({
           sale_id: sale.sale_id.id,
+          store_id: 'store-123',
           reason: 'Customer changed mind'
         });
 
