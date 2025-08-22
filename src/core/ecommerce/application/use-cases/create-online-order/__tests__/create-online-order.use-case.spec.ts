@@ -2,6 +2,7 @@ import { CreateOnlineOrderUseCase } from '../create-online-order.use-case';
 import { CreateOnlineOrderInput } from '../create-online-order.input';
 import { OnlineOrderInMemoryRepository } from '../../../../domain/repositories/online-order-in-memory.repository';
 import { InvalidArgumentError } from '../../../../../shared/domain/errors/invalid-argument.error';
+import { InvalidPriceError } from '../../../../../shared/domain/value-objects/price.vo';
 
 describe('CreateOnlineOrderUseCase Unit Tests', () => {
   let useCase: CreateOnlineOrderUseCase;
@@ -190,7 +191,7 @@ describe('CreateOnlineOrderUseCase Unit Tests', () => {
       delivery_fee: 5.99
     };
 
-    await expect(useCase.execute(input)).rejects.toThrow(InvalidArgumentError);
+    await expect(useCase.execute(input)).rejects.toThrow(InvalidPriceError);
   });
 
   it('should throw error when delivery address is invalid', async () => {

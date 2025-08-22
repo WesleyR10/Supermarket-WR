@@ -178,7 +178,10 @@ export type OnlineOrderCreateCommand = {
   }>;
   delivery_address: DeliveryAddressProps;
   delivery_fee: number;
-  payment_method?: string;
+  payment_method?: {
+    type: string;
+    details?: any;
+  };
   notes?: string;
   estimated_delivery?: Date;
 };
@@ -232,7 +235,10 @@ export class OnlineOrder extends AggregateRoot {
       items: orderItems,
       delivery_address: DeliveryAddress.create(props.delivery_address),
       delivery_fee: new Money(props.delivery_fee),
-      payment_method: props.payment_method ? PaymentMethod.fromString(props.payment_method) : null,
+      payment_method: props.payment_method ? new PaymentMethod(
+        props.payment_method.type as any,
+        props.payment_method.details
+      ) : null,
       notes: props.notes ?? null,
       estimated_delivery: props.estimated_delivery ?? null
     });

@@ -80,7 +80,7 @@ export class Location extends ValueObject {
 
   // Novo: código de 2 partes (corredor-seção) usado em alguns casos de uso
   getAisleSectionCode(): string {
-    return `${this.aisle}-${this.section}-${this.shelf}`;
+    return `${this.aisle}-${this.section}`;
   }
 
   isSameAisle(other: Location): boolean {

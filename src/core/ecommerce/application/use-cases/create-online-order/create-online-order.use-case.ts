@@ -36,7 +36,10 @@ export class CreateOnlineOrderUseCase
         longitude: input.delivery_address.longitude,
       },
       delivery_fee: input.delivery_fee,
-      payment_method: input.payment_method?.type,
+      payment_method: input.payment_method ? {
+        type: input.payment_method.type,
+        details: input.payment_method.details
+      } : undefined,
       notes: input.notes,
       estimated_delivery: input.estimated_delivery
         ? new Date(input.estimated_delivery)

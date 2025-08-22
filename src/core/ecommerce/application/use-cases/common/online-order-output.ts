@@ -25,7 +25,10 @@ export type OnlineOrderOutput = {
   subtotal: number;
   delivery_fee: number;
   total: number;
-  payment_method?: string;
+  payment_method?: {
+    type: string;
+    details?: Record<string, any>;
+  };
   notes?: string;
   estimated_delivery?: string;
   actual_delivery?: string;
@@ -60,8 +63,11 @@ export class OnlineOrderOutputMapper {
       subtotal: entity.subtotal.value,
       delivery_fee: entity.delivery_fee.value,
       total: entity.total.value,
-      payment_method: entity.payment_method?.toString(),
-      notes: entity.notes ,
+      payment_method: entity.payment_method ? {
+        type: entity.payment_method.type,
+        details: entity.payment_method.details
+      } : undefined,
+      notes: entity.notes ?? undefined,
       estimated_delivery: entity.estimated_delivery?.toISOString(),
       actual_delivery: entity.actual_delivery?.toISOString(),
       created_at: entity.created_at.toISOString(),

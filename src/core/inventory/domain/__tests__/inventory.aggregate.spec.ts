@@ -60,7 +60,7 @@ describe('Inventory Aggregate Unit Tests', () => {
       expect(inventory.min_stock.value).toBe(5);
       expect(inventory.max_stock.value).toBe(200);
       expect(inventory.location).toBeInstanceOf(LocationOv);
-      expect(inventory.location_code).toBe('A-01-01');
+      expect(inventory.location_code).toBe('A-01');
       expect(inventory.expiry_date?.value).toEqual(expiryDate);
       expect(inventory.batch_number).toBe('BATCH001');
       expect(inventory.supplier_id).toBe('supplier-123');
@@ -103,7 +103,7 @@ describe('Inventory Aggregate Unit Tests', () => {
 
       expect(inventory.quantity.value).toBe(50);
       expect(inventory.location).toBeInstanceOf(LocationOv);
-      expect(inventory.location_code).toBe('A-01-01');
+      expect(inventory.location_code).toBe('A-01');
       expect(inventory.expiry_date).toBeInstanceOf(ExperyDateOv);
       expect(inventory.expiry_date?.value).toEqual(expiryDate);
       expect(inventory.batch_number).toBe('BATCH001');
@@ -172,7 +172,7 @@ describe('Inventory Aggregate Unit Tests', () => {
 
     test('should set location', () => {
       inventory.setLocation('B-02-03');
-      expect(inventory.location_code).toBe('B-02-03');
+      expect(inventory.location_code).toBe('B-02');
     });
 
     test('should set expiry date', () => {

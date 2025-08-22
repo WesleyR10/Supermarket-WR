@@ -76,7 +76,7 @@ describe('UpdateInventoryUseCase Unit Tests', () => {
     const updatedInventory = await repository.findById(inventory.inventory_item_id);
     expect(updatedInventory?.quantity.value).toBe(75);
     expect(updatedInventory?.cost_price?.value).toBe(12.00);
-    expect(updatedInventory?.location_code).toBe('B-2-3'); // location_code agora retorna corredor-seção-prateleira
+    expect(updatedInventory?.location_code).toBe('B-2'); // location_code agora retorna corredor-seção
     expect(updatedInventory?.is_active).toBe(true);
   });
 
