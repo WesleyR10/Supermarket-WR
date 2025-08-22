@@ -229,6 +229,100 @@ export class ClientFakeBuilder<TBuild = any> {
     return this;
   }
 
+  // Métodos específicos para testes de domain services
+  withChampionClient() {
+    this._customer_type = CustomerType.VIP;
+    this._loyalty_level = LoyaltyLevel.PLATINUM;
+    this._loyalty_points = (_index) => this.chance.integer({ min: 15000, max: 50000 });
+    this._total_purchases = (_index) => this.chance.integer({ min: 50, max: 200 });
+    this._avg_monthly_spending = (_index) => this.chance.floating({ min: 1500, max: 5000, fixed: 2 });
+    this._last_purchase_date = (_index) => new Date(Date.now() - this.chance.integer({ min: 1, max: 15 }) * 24 * 60 * 60 * 1000);
+    this._credit_limit = (_index) => this.chance.floating({ min: 3000, max: 10000, fixed: 2 });
+    this._created_at = (_index) => new Date(Date.now() - this.chance.integer({ min: 365, max: 1095 }) * 24 * 60 * 60 * 1000);
+    return this;
+  }
+
+  withAtRiskClient() {
+    this._loyalty_level = LoyaltyLevel.BRONZE;
+    this._loyalty_points = (_index) => this.chance.integer({ min: 0, max: 500 });
+    this._total_purchases = (_index) => this.chance.integer({ min: 1, max: 10 });
+    this._avg_monthly_spending = (_index) => this.chance.floating({ min: 20, max: 200, fixed: 2 });
+    this._last_purchase_date = (_index) => new Date(Date.now() - this.chance.integer({ min: 90, max: 180 }) * 24 * 60 * 60 * 1000);
+    this._credit_limit = null;
+    return this;
+  }
+
+  withLostClient() {
+    this._loyalty_level = LoyaltyLevel.BRONZE;
+    this._loyalty_points = (_index) => this.chance.integer({ min: 0, max: 100 });
+    this._total_purchases = (_index) => this.chance.integer({ min: 1, max: 5 });
+    this._avg_monthly_spending = (_index) => this.chance.floating({ min: 10, max: 100, fixed: 2 });
+    this._last_purchase_date = (_index) => new Date(Date.now() - this.chance.integer({ min: 365, max: 730 }) * 24 * 60 * 60 * 1000);
+    this._credit_limit = null;
+    return this;
+  }
+
+  withHighCreditScoreClient() {
+    this._loyalty_level = this.chance.pickone([LoyaltyLevel.GOLD, LoyaltyLevel.PLATINUM]);
+    this._total_purchases = (_index) => this.chance.integer({ min: 30, max: 100 });
+    this._avg_monthly_spending = (_index) => this.chance.floating({ min: 800, max: 2500, fixed: 2 });
+    this._last_purchase_date = (_index) => new Date(Date.now() - this.chance.integer({ min: 1, max: 30 }) * 24 * 60 * 60 * 1000);
+    this._credit_limit = (_index) => this.chance.floating({ min: 1000, max: 5000, fixed: 2 });
+    this._created_at = (_index) => new Date(Date.now() - this.chance.integer({ min: 180, max: 730 }) * 24 * 60 * 60 * 1000);
+    return this;
+  }
+
+  withLowCreditScoreClient() {
+    this._loyalty_level = LoyaltyLevel.BRONZE;
+    this._total_purchases = (_index) => this.chance.integer({ min: 0, max: 5 });
+    this._avg_monthly_spending = (_index) => this.chance.floating({ min: 10, max: 200, fixed: 2 });
+    this._last_purchase_date = (_index) => this.chance.bool({ likelihood: 50 }) ? 
+      new Date(Date.now() - this.chance.integer({ min: 60, max: 180 }) * 24 * 60 * 60 * 1000) : null;
+    this._credit_limit = null;
+    this._created_at = (_index) => new Date(Date.now() - this.chance.integer({ min: 30, max: 90 }) * 24 * 60 * 60 * 1000);
+    return this;
+  }
+
+  withFrequentBuyer() {
+    this._total_purchases = (_index) => this.chance.integer({ min: 20, max: 80 });
+    this._avg_monthly_spending = (_index) => this.chance.floating({ min: 300, max: 1200, fixed: 2 });
+    this._last_purchase_date = (_index) => new Date(Date.now() - this.chance.integer({ min: 1, max: 7 }) * 24 * 60 * 60 * 1000);
+    this._loyalty_level = this.chance.pickone([LoyaltyLevel.SILVER, LoyaltyLevel.GOLD]);
+    this._created_at = (_index) => new Date(Date.now() - this.chance.integer({ min: 120, max: 365 }) * 24 * 60 * 60 * 1000);
+    return this;
+  }
+
+  withOccasionalBuyer() {
+    this._total_purchases = (_index) => this.chance.integer({ min: 3, max: 15 });
+    this._avg_monthly_spending = (_index) => this.chance.floating({ min: 50, max: 300, fixed: 2 });
+    this._last_purchase_date = (_index) => new Date(Date.now() - this.chance.integer({ min: 30, max: 90 }) * 24 * 60 * 60 * 1000);
+    this._loyalty_level = this.chance.pickone([LoyaltyLevel.BRONZE, LoyaltyLevel.SILVER]);
+    this._created_at = (_index) => new Date(Date.now() - this.chance.integer({ min: 90, max: 365 }) * 24 * 60 * 60 * 1000);
+    return this;
+  }
+
+  withTotalSpent(valueOrFactory: PropOrFactory<number>) {
+    // Calcula avg_monthly_spending baseado no total gasto e tempo como cliente
+    this._avg_monthly_spending = (index) => {
+      const totalSpent = typeof valueOrFactory === 'function' ? valueOrFactory(index) : valueOrFactory;
+      const createdAt = this._created_at ? 
+        (typeof this._created_at === 'function' ? this._created_at(index) : this._created_at) :
+        new Date(Date.now() - 180 * 24 * 60 * 60 * 1000); // 6 meses padrão
+      
+      const monthsAsClient = Math.max(1, Math.floor((Date.now() - createdAt.getTime()) / (30 * 24 * 60 * 60 * 1000)));
+      // Removido arredondamento para evitar perda de precisão que derrubava o ticket médio abaixo do limiar
+      return (totalSpent / monthsAsClient);
+    };
+    
+    // Configura total_purchases baseado no gasto total (assumindo compras de ~R$50 em média)
+    this._total_purchases = (index) => {
+      const totalSpent = typeof valueOrFactory === 'function' ? valueOrFactory(index) : valueOrFactory;
+      return totalSpent === 0 ? 0 : Math.max(1, Math.floor(totalSpent / 50));
+    };
+    
+    return this;
+  }
+
   build(): TBuild {
     const clients = new Array(this.countObjs)
       .fill(undefined)
@@ -384,4 +478,4 @@ export class ClientFakeBuilder<TBuild = any> {
 
     return undefined;
   }
-} 
+}

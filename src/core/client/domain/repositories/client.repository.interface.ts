@@ -1,13 +1,56 @@
 import { ISearchableRepository } from '../../../shared/domain/repository/repository-interface';
 import { Client, ClientId, CustomerType, LoyaltyLevel } from '../client.aggregate';
-import { SearchParams } from '../../../shared/domain/repository/search-params';
+import { SearchParams, SearchParamsConstructorProps } from '../../../shared/domain/repository/search-params';
 import { SearchResult } from '../../../shared/domain/repository/search-result';
 
-export type ClientFilter = string;
+export type ClientFilter = {
+  stores_id?: string;
+  filter?: string;
+  customer_type?: CustomerType;
+  loyalty_level?: LoyaltyLevel;
+  is_active?: boolean;
+};
 
-export class ClientSearchParams extends SearchParams<ClientFilter> {}
+export class ClientSearchParams extends SearchParams<ClientFilter> {
+  static create(props: SearchParamsConstructorProps<ClientFilter>): ClientSearchParams {
+    // stores_id é obrigatório para isolamento multi-tenant
+    if (!props.filter?.stores_id) {
+      throw new Error('stores_id is required for client search to ensure multi-tenant isolation');
+    }
+    return new ClientSearchParams(props);
+  }
 
-export class ClientSearchResult extends SearchResult<Client> {}
+  get filter(): ClientFilter | null {
+    return this._filter;
+  }
+
+  protected set filter(value: ClientFilter | null) {
+    const _value =
+      !value || (value as unknown) === '' || typeof value !== 'object'
+        ? null
+        : value;
+
+    if (!_value || !_value.stores_id) {
+      throw new Error('stores_id is required for client filter to ensure multi-tenant isolation');
+    }
+
+    const filter = {
+      stores_id: `${_value.stores_id}`,
+      ...(_value && _value.filter && { filter: `${_value.filter}` }),
+      ...(_value && _value.customer_type && { customer_type: _value.customer_type }),
+      ...(_value && _value.loyalty_level && { loyalty_level: _value.loyalty_level }),
+      ...(_value && _value.is_active !== undefined && { is_active: _value.is_active }),
+    };
+
+    this._filter = Object.keys(filter).length === 0 ? null : filter;
+  }
+}
+
+export class ClientSearchResult extends SearchResult<Client> {
+  constructor(props: SearchResult<Client>) {
+    super(props);
+  }
+}
 
 export interface IClientRepository extends ISearchableRepository<
   Client,
@@ -30,4 +73,4 @@ export interface IClientRepository extends ISearchableRepository<
   findByLoyaltyCardNumber(cardNumber: string): Promise<Client | null>; // Busca um cliente por número de cartão de fidelidade
   findClientsForPromotions(): Promise<Client[]>; // Busca todos os clientes para promoções
   findClientsBySpendingRange(minSpending: number, maxSpending: number): Promise<Client[]>; // Busca todos os clientes por faixa de gastos
-} 
+}

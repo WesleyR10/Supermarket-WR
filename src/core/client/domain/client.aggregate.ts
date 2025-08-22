@@ -3,12 +3,14 @@ import { ValueObject } from '../../shared/domain/value-object';
 import { Uuid } from '../../shared/domain/value-objects/uuid.vo';
 import { ClientValidatorFactory } from './client.validator';
 import { ClientFakeBuilder } from './client-fake.builder';
+import { Money } from '../../shared/domain/value-objects/money.vo';
 
 export class ClientId extends Uuid {}
 
 export enum CustomerType {
   INDIVIDUAL = 'INDIVIDUAL', // Pessoa física
   BUSINESS = 'BUSINESS', // Pessoa jurídica
+  REGULAR = 'REGULAR', // Cliente regular
   VIP = 'VIP', // Cliente VIP
   WHOLESALE = 'WHOLESALE', // Atacadista
   EMPLOYEE = 'EMPLOYEE', // Funcionário
@@ -204,13 +206,11 @@ export class Client extends AggregateRoot {
 
   redeemLoyaltyPoints(points: number): void {
     if (points < 0) {
-      this.notification.addError('Pontos não podem ser negativos', 'loyalty_points');
-      return;
+      throw new Error('Pontos não podem ser negativos');
     }
     
     if (points > this.loyalty_points) {
-      this.notification.addError('Pontos insuficientes', 'loyalty_points');
-      return;
+      throw new Error('Pontos insuficientes para resgate');
     }
     
     this.loyalty_points -= points;
@@ -243,24 +243,44 @@ export class Client extends AggregateRoot {
     this.validate(['customer_type']);
   }
 
-  updatePurchaseStats(purchaseAmount: number): void {
-    if (purchaseAmount < 0) {
-      this.notification.addError('Valor da compra não pode ser negativo', 'avg_monthly_spending');
-      return;
+  updatePurchaseStats(avgMonthlySpending: number): void {
+    if (avgMonthlySpending < 0) {
+      throw new Error('Valor médio de gastos não pode ser negativo');
+    }
+
+    this.avg_monthly_spending = avgMonthlySpending;
+    this.updated_at = new Date();
+    this.validate(['avg_monthly_spending']);
+  }
+
+  // Integração com Money VO (compatibilidade mantida)
+  updatePurchaseStatsMoney(avgMonthlySpending: Money): void {
+    if (!avgMonthlySpending) {
+      throw new Error('Valor médio de gastos inválido');
+    }
+    this.avg_monthly_spending = avgMonthlySpending.value;
+    this.updated_at = new Date();
+    this.validate(['avg_monthly_spending']);
+  }
+
+  getAvgMonthlySpendingMoney(): Money | null {
+    return this.avg_monthly_spending === null ? null : new Money(this.avg_monthly_spending);
+  }
+
+  recordPurchase(amount: number): void {
+    if (amount <= 0) {
+      throw new Error('Valor da compra deve ser positivo');
     }
 
     this.total_purchases += 1;
     this.last_purchase_date = new Date();
-    
-    // Recalcular média mensal simplificada
-    if (this.avg_monthly_spending) {
-      this.avg_monthly_spending = (this.avg_monthly_spending + purchaseAmount) / 2;
-    } else {
-      this.avg_monthly_spending = purchaseAmount;
-    }
-    
     this.updated_at = new Date();
-    this.validate(['avg_monthly_spending']);
+  }
+
+  generateLoyaltyCard(): void {
+    // Gerar número de cartão com 10 dígitos
+    this.loyalty_card_number = Math.floor(Math.random() * 10000000000).toString().padStart(10, '0');
+    this.updated_at = new Date();
   }
 
   // =============================================
@@ -269,13 +289,28 @@ export class Client extends AggregateRoot {
 
   setCreditLimit(limit: number | null): void {
     if (limit !== null && limit < 0) {
-      this.notification.addError('Limite de crédito não pode ser negativo', 'credit_limit');
-      return;
+      throw new Error('Limite de crédito não pode ser negativo');
     }
     
     this.credit_limit = limit;
     this.updated_at = new Date();
     this.validate(['credit_limit']);
+  }
+
+  // Integração com Money VO (compatibilidade mantida)
+  setCreditLimitMoney(limit: Money | null): void {
+    if (limit === null) {
+      this.credit_limit = null;
+    } else {
+      // Money já valida valores negativos e limites superiores
+      this.credit_limit = limit.value;
+    }
+    this.updated_at = new Date();
+    this.validate(['credit_limit']);
+  }
+
+  getCreditLimitMoney(): Money | null {
+    return this.credit_limit === null ? null : new Money(this.credit_limit);
   }
 
   canPurchaseOnCredit(amount: number): boolean {
@@ -290,16 +325,24 @@ export class Client extends AggregateRoot {
 
   updateContactPreferences(
     contactMethod: ContactMethod,
-    allowsPromotions: boolean,
-    allowsSms: boolean,
-    allowsEmail: boolean
+    allowsPromotions?: boolean,
+    allowsSms?: boolean,
+    allowsEmail?: boolean
   ): void {
     this.preferred_contact_method = contactMethod;
-    this.allows_promotions = allowsPromotions;
-    this.allows_sms = allowsSms;
-    this.allows_email = allowsEmail;
+    
+    if (allowsPromotions !== undefined) {
+      this.allows_promotions = allowsPromotions;
+    }
+    if (allowsSms !== undefined) {
+      this.allows_sms = allowsSms;
+    }
+    if (allowsEmail !== undefined) {
+      this.allows_email = allowsEmail;
+    }
+    
     this.updated_at = new Date();
-    this.validate(['preferred_contact_method']);
+    this.validate(['preferred_contact_method', 'allows_promotions', 'allows_sms', 'allows_email']);
   }
 
   updatePaymentPreference(preference: PaymentPreference): void {
@@ -373,7 +416,16 @@ export class Client extends AggregateRoot {
   }
 
   addNote(note: string): void {
-    this.notes = this.notes ? `${this.notes}\n${note}` : note;
+    const trimmed = (note ?? '').trim();
+    if (!trimmed) {
+      // Não altera nada se nota vazia/nula
+      return;
+    }
+    if (!this.notes || this.notes.trim() === '') {
+      this.notes = trimmed;
+    } else {
+      this.notes = `${this.notes}\n${trimmed}`;
+    }
     this.updated_at = new Date();
   }
 
@@ -413,4 +465,4 @@ export class Client extends AggregateRoot {
       deleted_at: this.deleted_at,
     };
   }
-} 
+}

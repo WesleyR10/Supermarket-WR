@@ -38,17 +38,63 @@ export class ClientInMemoryRepository
       return items;
     }
 
+    // Suporte legado: quando filter é string, tratar como busca textual ampla
+    if (typeof (filter as any) === 'string') {
+      const text = String(filter).toLowerCase();
+      return items.filter((item) => {
+        const matchesText = (
+          item.user_id.toLowerCase().includes(text) ||
+          item.stores_id.toLowerCase().includes(text) ||
+          (item.loyalty_card_number && item.loyalty_card_number.toLowerCase().includes(text)) ||
+          (item.notes && item.notes.toLowerCase().includes(text)) ||
+          (item.registration_source && item.registration_source.toLowerCase().includes(text))
+        );
+        return matchesText;
+      });
+    }
+
+    const objFilter = filter as ClientFilter;
+
     return items.filter((item) => {
-      return (
-        item.user_id.toLowerCase().includes(filter.toLowerCase()) ||
-        item.stores_id.toLowerCase().includes(filter.toLowerCase()) ||
-        (item.loyalty_card_number &&
-          item.loyalty_card_number.toLowerCase().includes(filter.toLowerCase())) ||
-        (item.notes &&
-          item.notes.toLowerCase().includes(filter.toLowerCase())) ||
-        (item.registration_source &&
-          item.registration_source.toLowerCase().includes(filter.toLowerCase()))
-      );
+      // Multi-tenant: quando informado, filtra por stores_id
+      if (objFilter.stores_id && item.stores_id !== objFilter.stores_id) {
+        return false;
+      }
+
+      // Filtro por customer_type
+      if (objFilter.customer_type && item.customer_type !== objFilter.customer_type) {
+        return false;
+      }
+
+      // Filtro por loyalty_level
+      if (objFilter.loyalty_level && item.loyalty_level !== objFilter.loyalty_level) {
+        return false;
+      }
+
+      // Filtro por is_active
+      if (objFilter.is_active !== undefined && item.is_active !== objFilter.is_active) {
+        return false;
+      }
+
+      // Filtro por texto (busca em campos string)
+      if ((objFilter as any).filter) {
+        const textFilter = String((objFilter as any).filter).toLowerCase();
+        const matchesText = (
+          item.user_id.toLowerCase().includes(textFilter) ||
+          item.stores_id.toLowerCase().includes(textFilter) ||
+          (item.loyalty_card_number &&
+            item.loyalty_card_number.toLowerCase().includes(textFilter)) ||
+          (item.notes &&
+            item.notes.toLowerCase().includes(textFilter)) ||
+          (item.registration_source &&
+            item.registration_source.toLowerCase().includes(textFilter))
+        );
+        if (!matchesText) {
+          return false;
+        }
+      }
+
+      return true;
     });
   }
 

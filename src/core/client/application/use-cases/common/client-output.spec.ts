@@ -68,6 +68,7 @@ describe('ClientOutputMapper Unit Tests', () => {
     // Simular evolução do cliente VIP
     entity.addLoyaltyPoints(12000);
     entity.updatePurchaseStats(2500);
+    entity.recordPurchase(100); // Para incrementar total_purchases
     entity.setLoyaltyCardNumber('VIP2024001');
     
     const spyToJSON = jest.spyOn(entity, 'toJSON');
@@ -120,6 +121,7 @@ describe('ClientOutputMapper Unit Tests', () => {
     // Simular histórico de compras corporativas
     entity.addLoyaltyPoints(3500);
     entity.updatePurchaseStats(1200);
+    entity.recordPurchase(300); // Para incrementar total_purchases
     entity.setLoyaltyCardNumber('CORP2024001');
     
     const spyToJSON = jest.spyOn(entity, 'toJSON');
@@ -172,6 +174,7 @@ describe('ClientOutputMapper Unit Tests', () => {
     // Simular histórico de compras em grande volume
     entity.addLoyaltyPoints(7500);
     entity.updatePurchaseStats(3000);
+    entity.recordPurchase(500); // Para incrementar total_purchases
     entity.setLoyaltyCardNumber('WHOL2024001');
     
     const spyToJSON = jest.spyOn(entity, 'toJSON');
@@ -241,4 +244,4 @@ describe('ClientOutputMapper Unit Tests', () => {
       deleted_at: null,
     });
   });
-}); 
+});

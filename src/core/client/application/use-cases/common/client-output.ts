@@ -32,6 +32,6 @@ export class ClientOutputMapper {
     return {
       id: client_id,
       ...otherProps,
-    };
+    } as ClientOutput;
   }
-} 
+}
