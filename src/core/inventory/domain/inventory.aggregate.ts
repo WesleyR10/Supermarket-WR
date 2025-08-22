@@ -92,6 +92,7 @@ export class Inventory extends AggregateRoot {
   }
 
   static create(props: InventoryCreateCommand): Inventory {
+    const costPrice = props.cost_price ?? props.unit_cost;
     const inventory = new Inventory({
       ...props,
       quantity: new Quantity(props.quantity),
@@ -99,7 +100,7 @@ export class Inventory extends AggregateRoot {
       max_stock: new Quantity(props.max_stock),
       location: props.location ? Location.fromString(props.location) : null,
       expiry_date: props.expiry_date ? new ExpiryDate(props.expiry_date) : null,
-      cost_price: props.cost_price ? new Money(props.cost_price) : null,
+      cost_price: costPrice ? new Money(costPrice) : null,
       unit_price: props.unit_price ? new Money(props.unit_price) : null,
     });
     // Seguindo padrão base: validar apenas campos de "forma", não VOs
@@ -222,7 +223,7 @@ export class Inventory extends AggregateRoot {
   calculateProfitMargin(): number {
     if (!this.cost_price || !this.unit_price || this.cost_price.isZero()) return 0;
     const profit = this.unit_price.subtract(this.cost_price);
-    return (profit.value / this.unit_price.value) * 100;
+    return (profit.value / this.cost_price.value) * 100;
   }
 
   // Calcula valor total do estoque
@@ -263,7 +264,8 @@ export class Inventory extends AggregateRoot {
 
   // Getters para compatibilidade com código existente
   get location_code(): string | null {
-    return this.location ? this.location.toString() : null;
+    // Retorna apenas corredor-seção (ex.: A1-B2) para compatibilidade
+    return this.location ? this.location.getAisleSectionCode() : null;
   }
 
   get unit_cost(): number | null {

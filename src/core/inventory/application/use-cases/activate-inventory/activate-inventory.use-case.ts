@@ -58,7 +58,7 @@ export class ActivateInventoryUseCase
     }
 
     // Regra: Verificar se os preços estão definidos
-    if (inventory.unit_cost <= 0 || inventory.unit_price <= 0) {
+    if (!inventory.unit_cost || inventory.unit_cost <= 0 || !inventory.unit_price || inventory.unit_price.value <= 0) {
       inventory.notification.addError(
         'Cannot activate inventory item without valid unit cost and price',
         'unit_cost'

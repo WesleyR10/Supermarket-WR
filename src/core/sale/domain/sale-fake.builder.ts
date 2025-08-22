@@ -16,7 +16,7 @@ export class SaleFakeBuilder<TBuild = any> {
   private _items: PropOrFactory<SaleItem[]> = (_index) => this.generateSaleItems();
   private _store_id: PropOrFactory<string> = (_index) => this.chance.guid();
   private _register_number: PropOrFactory<number> = (_index) => this.chance.integer({ min: 1, max: 20 });
-  private _sale_date: PropOrFactory<Date> = (_index) => this.chance.date({ year: 2024 });
+  private _sale_date: PropOrFactory<Date> = (_index) => new Date(this.chance.date({ year: 2024 }));
   // auto generated in entity
   private _created_at: PropOrFactory<Date> | undefined = undefined;
 
@@ -169,7 +169,7 @@ export class SaleFakeBuilder<TBuild = any> {
         sale.validate();
         return sale;
       });
-    return this.countObjs === 1 ? (sales[0] as any) : sales;
+    return this.countObjs === 1 ? (sales[0] as any) : (sales as any);
   }
 
   get sale_id() {
@@ -294,4 +294,4 @@ export class SaleFakeBuilder<TBuild = any> {
 
     return items;
   }
-} 
+}

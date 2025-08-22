@@ -25,7 +25,7 @@ export class ProductInMemoryRepository
   }
 
   async findByBrand(storeId: string, brand: string): Promise<Product[]> {
-    return this.items.filter(item => item.store_id === storeId && item.brand === brand);
+    return this.items.filter(item => item.store_id === storeId && item.brand === brand && item.is_active);
   }
 
   async findByUnitType(storeId: string, unitType: UnitType): Promise<Product[]> {

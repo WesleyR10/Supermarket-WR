@@ -24,7 +24,7 @@ describe('UpdateUnitPriceUseCase Unit Tests', () => {
       max_stock: 200,
       unit_cost: 10.50,
       unit_price: 15.75,
-      location_code: 'A1-B2',
+      location: 'A1-B2',
       is_active: true
     });
     repository.items.push(inventory);
@@ -103,7 +103,7 @@ describe('UpdateUnitPriceUseCase Unit Tests', () => {
         await useCase.execute(input);
 
         const updatedInventory = await repository.findById(inventory.inventory_item_id);
-        expect(updatedInventory!.unit_price).toBe(17.50);
+        expect(updatedInventory!.unit_price!.value).toBe(17.50);
       });
     });
 

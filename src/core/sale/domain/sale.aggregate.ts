@@ -331,7 +331,7 @@ export class Sale extends AggregateRoot {
    */
   // ✅ Métodos que retornam valores monetários padronizados
   getSubtotalWithDiscount(): number {
-    const subtotal = this.total_amount - this.discount_amount;
+    const subtotal = Math.max(0, this.total_amount - this.discount_amount);
     return new Money(subtotal).value;
   }
 

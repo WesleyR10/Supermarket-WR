@@ -5,7 +5,7 @@ import { Money } from '../../shared/domain/value-objects/money.vo';
 import { Quantity } from '../../shared/domain/value-objects/quantity.vo';
 import { Price } from '../../shared/domain/value-objects/price.vo';
 import { PaymentMethod } from '../../shared/domain/value-objects/payment-method.vo';
-import { OnlineOrderValidatorFactory } from './online-order.validator';
+// import { OnlineOrderValidatorFactory } from './online-order.validator';
 import { OrderItemFakeBuilder } from './fake-builders/order-item-fake.builder';
 import { DeliveryAddressFakeBuilder } from './fake-builders/delivery-address-fake.builder';
 import { OnlineOrderFakeBuilder } from './fake-builders/online-order-fake.builder';
@@ -246,7 +246,10 @@ export class OnlineOrder extends AggregateRoot {
   }
 
   validate(fields?: string[]): boolean {
-    const validator = OnlineOrderValidatorFactory.create();
+    // Lazy import to avoid circular dependency at module load time
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const validatorModule = require('./online-order.validator') as any;
+    const validator = validatorModule.OnlineOrderValidatorFactory.create();
     return validator.validate(this.notification, this, fields);
   }
 
@@ -326,7 +329,7 @@ export class OnlineOrder extends AggregateRoot {
 
   startPreparing(): void {
     if (this.status !== OrderStatus.CONFIRMED) {
-      this.notification.addError('Only confirmed orders can start preparing', 'status');
+      this.notification.addError('Only confirmed orders can start preparation', 'status');
       return;
     }
 
@@ -336,7 +339,7 @@ export class OnlineOrder extends AggregateRoot {
 
   sendForDelivery(): void {
     if (this.status !== OrderStatus.PREPARING) {
-      this.notification.addError('Only preparing orders can be sent for delivery', 'status');
+      this.notification.addError('Only orders in preparation can be sent for delivery', 'status');
       return;
     }
 
@@ -356,8 +359,8 @@ export class OnlineOrder extends AggregateRoot {
   }
 
   cancel(): void {
-    if ([OrderStatus.DELIVERED, OrderStatus.CANCELLED].includes(this.status)) {
-      this.notification.addError('Cannot cancel delivered or already cancelled orders', 'status');
+    if (![OrderStatus.PENDING, OrderStatus.CONFIRMED].includes(this.status)) {
+      this.notification.addError('Only pending or confirmed orders can be cancelled', 'status');
       return;
     }
 
@@ -366,13 +369,18 @@ export class OnlineOrder extends AggregateRoot {
   }
 
   setPaymentMethod(paymentMethod: PaymentMethod): void {
+    if (this.status !== OrderStatus.PENDING) {
+      this.notification.addError('Cannot set payment method for a non-pending order', 'status');
+      return;
+    }
+
     this.payment_method = paymentMethod;
     this.updated_at = new Date();
   }
 
   updateDeliveryAddress(newAddress: DeliveryAddress): void {
     if (this.status !== OrderStatus.PENDING) {
-      this.notification.addError('Cannot update delivery address for non-pending orders', 'status');
+      this.notification.addError('Cannot update delivery address for a non-pending order', 'status');
       return;
     }
 
@@ -381,16 +389,24 @@ export class OnlineOrder extends AggregateRoot {
   }
 
   updateNotes(notes: string | null): void {
+    if (this.status !== OrderStatus.PENDING) {
+      this.notification.addError('Cannot update notes for a non-pending order', 'status');
+      return;
+    }
+
     this.notes = notes;
     this.updated_at = new Date();
   }
 
   updateEstimatedDelivery(estimatedDelivery: Date | null): void {
+    if (this.status !== OrderStatus.PENDING) {
+      this.notification.addError('Cannot update estimated delivery for a non-pending order', 'status');
+      return;
+    }
+
     this.estimated_delivery = estimatedDelivery;
     this.updated_at = new Date();
   }
-
-  // REGRAS DE NEGÓCIO ESPECÍFICAS DO E-COMMERCE
 
   isPending(): boolean {
     return this.status === OrderStatus.PENDING;
@@ -409,11 +425,11 @@ export class OnlineOrder extends AggregateRoot {
   }
 
   canBeModified(): boolean {
-    return this.status === OrderStatus.PENDING;
+    return [OrderStatus.PENDING].includes(this.status);
   }
 
   canBeCancelled(): boolean {
-    return ![OrderStatus.DELIVERED, OrderStatus.CANCELLED].includes(this.status);
+    return [OrderStatus.PENDING, OrderStatus.CONFIRMED].includes(this.status);
   }
 
   hasPaymentMethod(): boolean {
@@ -421,7 +437,7 @@ export class OnlineOrder extends AggregateRoot {
   }
 
   isReadyForConfirmation(): boolean {
-    return this.isPending() && this.hasPaymentMethod() && this.items.length > 0;
+    return this.items.length > 0 && this.hasPaymentMethod() && this.total.value > 0;
   }
 
   getItemCount(): number {
@@ -429,7 +445,8 @@ export class OnlineOrder extends AggregateRoot {
   }
 
   getUniqueItemsCount(): number {
-    return this.items.length;
+    const uniqueProductIds = new Set(this.items.map(item => item.product_id.id));
+    return uniqueProductIds.size;
   }
 
   hasItem(productId: Uuid): boolean {
@@ -437,36 +454,38 @@ export class OnlineOrder extends AggregateRoot {
   }
 
   getItem(productId: Uuid): OrderItem | null {
-    return this.items.find(item => item.product_id.equals(productId)) || null;
+    return this.items.find(item => item.product_id.equals(productId)) ?? null;
   }
 
   isExpressDelivery(): boolean {
-    if (!this.estimated_delivery) return false;
-    const now = new Date();
-    const diffHours = (this.estimated_delivery.getTime() - now.getTime()) / (1000 * 60 * 60);
-    return diffHours <= 2; // Express se entrega em até 2 horas
+    // Entrega expressa quando não há estimativa definida (entrega imediata)
+    return this.estimated_delivery === null;
   }
 
   isScheduledDelivery(): boolean {
-    if (!this.estimated_delivery) return false;
-    const now = new Date();
-    return this.estimated_delivery.getTime() > now.getTime();
+    return this.estimated_delivery !== null;
   }
 
   getDeliveryTimeEstimate(): string {
-    if (!this.estimated_delivery) return 'Não informado';
-    
+    if (this.isExpressDelivery()) {
+      return '30-60 minutes';
+    }
+
+    if (!this.estimated_delivery) {
+      return 'N/A';
+    }
+
     const now = new Date();
-    const diffMinutes = Math.floor((this.estimated_delivery.getTime() - now.getTime()) / (1000 * 60));
-    
-    if (diffMinutes < 0) return 'Atrasado';
-    if (diffMinutes < 60) return `${diffMinutes} minutos`;
-    
-    const diffHours = Math.floor(diffMinutes / 60);
-    if (diffHours < 24) return `${diffHours} horas`;
-    
-    const diffDays = Math.floor(diffHours / 24);
-    return `${diffDays} dias`;
+    const diffMs = this.estimated_delivery.getTime() - now.getTime();
+    const diffMin = Math.max(0, Math.round(diffMs / 60000));
+
+    if (diffMin <= 60) {
+      return `${diffMin} minutes`;
+    }
+
+    const hours = Math.floor(diffMin / 60);
+    const minutes = diffMin % 60;
+    return `${hours}h ${minutes}m`;
   }
 
   private calculateSubtotal(): Money {
@@ -497,10 +516,10 @@ export class OnlineOrder extends AggregateRoot {
       subtotal: this.subtotal.value,
       delivery_fee: this.delivery_fee.value,
       total: this.total.value,
-      payment_method: this.payment_method?.type || null,
+      payment_method: this.payment_method?.toString() ?? null,
       notes: this.notes,
-      estimated_delivery: this.estimated_delivery?.toISOString() || null,
-      actual_delivery: this.actual_delivery?.toISOString() || null,
+      estimated_delivery: this.estimated_delivery?.toISOString() ?? null,
+      actual_delivery: this.actual_delivery?.toISOString() ?? null,
       created_at: this.created_at.toISOString(),
       updated_at: this.updated_at.toISOString()
     };

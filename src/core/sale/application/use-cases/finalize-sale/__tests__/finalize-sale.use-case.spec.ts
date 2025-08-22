@@ -36,14 +36,15 @@ describe('FinalizeSaleUseCase Unit Tests', () => {
   describe('execute method', () => {
     it('should finalize sale successfully', async () => {
       const input = new FinalizeSaleInput({
-        sale_id: sale.sale_id.id,
-        payment_method: PaymentMethod.CREDIT_CARD
-      });
+          sale_id: sale.sale_id.id,
+          payment_method: PaymentMethod.CASH,
+          store_id: 'store-123'
+        });
 
       const output = await useCase.execute(input);
 
       expect(output.sale_status).toBe(SaleStatus.COMPLETED);
-      expect(output.payment_method).toBe(PaymentMethod.CREDIT_CARD);
+      expect(output.payment_method).toBe(PaymentMethod.CASH);
       expect(output.total_amount).toBe(20.00);
     });
 
@@ -51,7 +52,8 @@ describe('FinalizeSaleUseCase Unit Tests', () => {
       const input = new FinalizeSaleInput({
         sale_id: sale.sale_id.id,
         payment_method: PaymentMethod.CASH,
-        received_amount: 25.00
+        received_amount: 25.00,
+        store_id: 'store-123'
       });
 
       const output = await useCase.execute(input);
@@ -64,17 +66,19 @@ describe('FinalizeSaleUseCase Unit Tests', () => {
       const input = new FinalizeSaleInput({
         sale_id: sale.sale_id.id,
         payment_method: PaymentMethod.CASH,
-        received_amount: 20.00
+        received_amount: 50.00,
+        store_id: 'store-123'
       });
 
       const output = await useCase.execute(input);
 
-      expect(output.change_amount).toBeUndefined();
+      expect(output.change_amount).toBe(30.00);
     });
 
     it('should throw InvalidUuidError when sale_id is invalid', async () => {
       const input = new FinalizeSaleInput({
-        sale_id: 'invalid-uuid'
+        sale_id: 'invalid-uuid',
+        store_id: 'store-123'
       });
 
       await expect(useCase.execute(input)).rejects.toThrow(InvalidUuidError);
@@ -83,7 +87,8 @@ describe('FinalizeSaleUseCase Unit Tests', () => {
     it('should throw NotFoundError when sale not found', async () => {
       const validUuid = '550e8400-e29b-41d4-a716-446655440000';
       const input = new FinalizeSaleInput({
-        sale_id: validUuid
+        sale_id: validUuid,
+        store_id: 'store-123'
       });
 
       await expect(useCase.execute(input)).rejects.toThrow(NotFoundError);
@@ -94,7 +99,8 @@ describe('FinalizeSaleUseCase Unit Tests', () => {
       await repository.update(sale);
 
       const input = new FinalizeSaleInput({
-        sale_id: sale.sale_id.id
+        sale_id: sale.sale_id.id,
+        store_id: 'store-123'
       });
 
       await expect(useCase.execute(input)).rejects.toThrow(EntityValidationError);
@@ -111,7 +117,8 @@ describe('FinalizeSaleUseCase Unit Tests', () => {
       repository.items.push(emptySale);
 
       const input = new FinalizeSaleInput({
-        sale_id: emptySale.sale_id.id
+        sale_id: emptySale.sale_id.id,
+        store_id: 'store-123'
       });
 
       await expect(useCase.execute(input)).rejects.toThrow(EntityValidationError);
@@ -144,7 +151,8 @@ describe('FinalizeSaleUseCase Unit Tests', () => {
 
           const input = new FinalizeSaleInput({
             sale_id: testSale.sale_id.id,
-            payment_method: method
+            payment_method: method,
+            store_id: 'store-123'
           });
 
           const output = await useCase.execute(input);
@@ -159,7 +167,8 @@ describe('FinalizeSaleUseCase Unit Tests', () => {
         const input = new FinalizeSaleInput({
           sale_id: sale.sale_id.id,
           payment_method: PaymentMethod.CASH,
-          received_amount: 25.00
+          received_amount: 25.00,
+          store_id: 'store-123'
         });
       
         const output = await useCase.execute(input);

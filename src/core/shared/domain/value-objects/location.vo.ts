@@ -78,6 +78,11 @@ export class Location extends ValueObject {
     return `${this.aisle}-${this.section}-${this.shelf}`;
   }
 
+  // Novo: código de 2 partes (corredor-seção) usado em alguns casos de uso
+  getAisleSectionCode(): string {
+    return `${this.aisle}-${this.section}-${this.shelf}`;
+  }
+
   isSameAisle(other: Location): boolean {
     return this.aisle.toLowerCase() === other.aisle.toLowerCase();
   }
@@ -165,10 +170,21 @@ export class Location extends ValueObject {
   static fromString(locationString: string): Location {
     const parts = locationString.split('-');
     
-    if (parts.length < 3) {
-      throw new InvalidLocationError('Location string must have at least aisle, section, and shelf (format: A-1-2 or A-1-2-3)');
+    // Aceitar formatos com 2, 3 ou 4 partes
+    if (parts.length < 2) {
+      throw new InvalidLocationError('Location string must have at least aisle and section (format: A1-B2, A-1-2 or A-1-2-3)');
     }
 
+    if (parts.length === 2) {
+      // Mapear para corredor-seção com prateleira padrão "1"
+      return new Location({
+        aisle: parts[0],
+        section: parts[1],
+        shelf: '1',
+      });
+    }
+
+    // 3 ou 4 partes seguem mapeamento usual
     return new Location({
       aisle: parts[0],
       section: parts[1],

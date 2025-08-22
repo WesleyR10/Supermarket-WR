@@ -30,14 +30,18 @@ export class SetLocationUseCase
       throw new EntityValidationError(inventory.notification.toJSON());
     }
 
-    // Definir nova localização
+    // Definir nova localização - InvalidLocationError será lançado se formato inválido
     inventory.setLocationCode(input.location_code);
 
     // Persistir mudanças
     await this.inventoryRepo.update(inventory);
 
     // Retornar output
-    return InventoryOutputMapper.toOutput(inventory);
+    const output = InventoryOutputMapper.toOutput(inventory);
+    if (inventory.location) {
+      output.location = inventory.location.getAisleSectionCode();
+    }
+    return output;
   }
 
   private validateBusinessRules(inventory: Inventory, locationCode: string): void {
@@ -46,15 +50,6 @@ export class SetLocationUseCase
       inventory.notification.addError(
         'Cannot change location of inactive inventory item',
         'is_active'
-      );
-    }
-
-    // Regra: Verificar formato do código de localização (padrão: A1-B2)
-    const locationPattern = /^[A-Z]\d+-[A-Z]\d+$/;
-    if (!locationPattern.test(locationCode)) {
-      inventory.notification.addError(
-        `Invalid location code format. Expected format: A1-B2, received: ${locationCode}`,
-        'location_code'
       );
     }
 

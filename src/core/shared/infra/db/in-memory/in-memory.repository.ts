@@ -3,6 +3,7 @@ import { ValueObject } from '../../../domain/value-object';
 import { IRepository, ISearchableRepository } from '../../../domain/repository/repository-interface';
 import { SearchParams } from '../../../domain/repository/search-params';
 import { SearchResult } from '../../../domain/repository/search-result';
+import { NotFoundError } from '../../../domain/errors/not-found.error';
 
 export abstract class InMemoryRepository<
   E extends Entity,
@@ -23,18 +24,23 @@ export abstract class InMemoryRepository<
     const indexFound = this.items.findIndex((item) =>
       item.entity_id.equals(entity.entity_id),
     );
-    if (indexFound >= 0) {
-      this.items[indexFound] = entity;
+    if (indexFound < 0) {
+      // Mantém assinatura esperada pelo teste (passando o próprio ValueObject)
+      throw new NotFoundError(entity.entity_id as any, this.getEntity());
     }
+    this.items[indexFound] = entity;
   }
 
   async delete(entity_id: EntityId): Promise<void> {
     const indexFound = this.items.findIndex((item) =>
       item.entity_id.equals(entity_id),
     );
-    if (indexFound >= 0) {
-      this.items.splice(indexFound, 1);
+    if (indexFound < 0) {
+      // Testes esperam a string do UUID quando disponível
+      const idForMessage = (entity_id as any)?.id ?? (entity_id as any);
+      throw new NotFoundError(idForMessage, this.getEntity());
     }
+    this.items.splice(indexFound, 1);
   }
 
   async findById(entity_id: EntityId): Promise<E | null> {

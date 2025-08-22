@@ -27,6 +27,11 @@ export class OnlineOrderFakeBuilder<TBuild = any> {
     return new OnlineOrderFakeBuilder<OnlineOrder>();
   }
 
+  // Alias de compatibilidade com testes: anOnlineOrder()
+  static anOnlineOrder() {
+    return OnlineOrderFakeBuilder.aOnlineOrder();
+  }
+
   static theOnlineOrders(countObjs: number) {
     return new OnlineOrderFakeBuilder<OnlineOrder[]>(countObjs);
   }

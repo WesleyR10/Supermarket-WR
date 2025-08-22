@@ -187,13 +187,38 @@ describe('FiscalConfig Aggregate Unit Tests', () => {
       expect(fiscalConfig.isValidForDate(futureDate)).toBe(false);
     });
 
-    test('should check if applies to product', () => {
+    test('should check if applies to product with NCM and category filters', () => {
       fiscalConfig.addNCMCode('12345678');
       fiscalConfig.addCategory('cat-123');
       
+      // Produto com NCM válido (atende ao filtro)
       expect(fiscalConfig.appliesTo({ ncm_code: '12345678' })).toBe(true);
+      // Produto com categoria válida (atende ao filtro)
       expect(fiscalConfig.appliesTo({ category_id: 'cat-123' })).toBe(true);
+      // Produto com NCM e categoria válidos
+      expect(fiscalConfig.appliesTo({ ncm_code: '12345678', category_id: 'cat-123' })).toBe(true);
+      // Produto com NCM inválido e sem categoria
       expect(fiscalConfig.appliesTo({ ncm_code: '87654321' })).toBe(false);
+      // Produto sem NCM e sem categoria
+      expect(fiscalConfig.appliesTo({})).toBe(false);
+    });
+
+    test('should check if applies to product with only NCM filter', () => {
+      const config = FiscalConfig.create({
+        store_id: 'store-123',
+        config_name: 'Test Config NCM Only',
+        config_type: FiscalConfigType.ICMS,
+        is_active: true,
+        priority: 1
+      });
+      config.addNCMCode('12345678');
+      
+      // Produto com NCM válido
+      expect(config.appliesTo({ ncm_code: '12345678' })).toBe(true);
+      // Produto com NCM inválido
+      expect(config.appliesTo({ ncm_code: '87654321' })).toBe(false);
+      // Produto sem NCM
+      expect(config.appliesTo({})).toBe(false);
     });
 
     test('should calculate tax', () => {

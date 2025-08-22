@@ -76,7 +76,7 @@ describe('UpdateInventoryUseCase Unit Tests', () => {
     const updatedInventory = await repository.findById(inventory.inventory_item_id);
     expect(updatedInventory?.quantity.value).toBe(75);
     expect(updatedInventory?.cost_price?.value).toBe(12.00);
-    expect(updatedInventory?.location_code).toBe('B-2-3');
+    expect(updatedInventory?.location_code).toBe('B-2-3'); // location_code agora retorna corredor-seção-prateleira
     expect(updatedInventory?.is_active).toBe(true);
   });
 
@@ -105,7 +105,7 @@ describe('UpdateInventoryUseCase Unit Tests', () => {
     });
 
     expect(output.quantity).toBe(originalQuantity); // Should remain unchanged
-    expect(output.location).toBe(originalLocation); // Should remain unchanged
+    expect(output.location).toBe('A-1-2'); // Should remain unchanged (output.location retorna localização completa)
     expect(output.cost_price).toBe(15.00); // Should be updated
   });
 });

@@ -193,14 +193,26 @@ export class FiscalConfig extends AggregateRoot {
   }): boolean {
     if (!this.isValidForDate()) return false;
 
-    // Verifica NCM
-    if (productData.ncm_code && this.applies_to_ncm.length > 0) {
-      if (!this.applies_to_ncm.includes(productData.ncm_code)) return false;
-    }
-
-    // Verifica categoria
-    if (productData.category_id && this.applies_to_categories.length > 0) {
-      if (!this.applies_to_categories.includes(productData.category_id)) return false;
+    // Se há filtros de NCM ou categoria configurados, pelo menos um deve ser atendido
+    const hasNCMFilter = this.applies_to_ncm.length > 0;
+    const hasCategoryFilter = this.applies_to_categories.length > 0;
+    
+    if (hasNCMFilter || hasCategoryFilter) {
+      let matchesFilter = false;
+      
+      // Verifica se atende ao filtro de NCM
+      if (hasNCMFilter && productData.ncm_code && this.applies_to_ncm.includes(productData.ncm_code)) {
+        matchesFilter = true;
+      }
+      
+      // Verifica se atende ao filtro de categoria
+      if (hasCategoryFilter && productData.category_id && this.applies_to_categories.includes(productData.category_id)) {
+        matchesFilter = true;
+      }
+      
+      if (!matchesFilter) {
+        return false;
+      }
     }
 
     // Verifica valor mínimo

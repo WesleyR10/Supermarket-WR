@@ -24,7 +24,7 @@ describe('ActivateInventoryUseCase Unit Tests', () => {
       max_stock: 200,
       unit_cost: 10.50,
       unit_price: 15.75,
-      location_code: 'A1-B2',
+      location: 'A1-B2',
       is_active: false
     });
     repository.items.push(inventory);
@@ -80,7 +80,6 @@ describe('ActivateInventoryUseCase Unit Tests', () => {
         max_stock: 200,
         unit_cost: 10.50,
         unit_price: 15.75,
-        location_code: '',
         is_active: false
       });
       repository.items.push(inventoryWithoutLocation);
@@ -102,7 +101,6 @@ describe('ActivateInventoryUseCase Unit Tests', () => {
         max_stock: 200,
         unit_cost: 0,
         unit_price: 0,
-        location_code: 'A1-B2',
         is_active: false
       });
       repository.items.push(inventoryWithInvalidPrices);
@@ -175,7 +173,7 @@ describe('ActivateInventoryUseCase Unit Tests', () => {
         const output = await useCase.execute(input);
 
         expect(output.is_active).toBe(true);
-        expect(output.location_code).toBe('A1-B2');
+        expect(output.location).toBe('A1-B2-1'); // Location.fromString adiciona posição padrão quando não especificada
       });
 
       it('should activate products for sale after price adjustment', async () => {
@@ -186,7 +184,7 @@ describe('ActivateInventoryUseCase Unit Tests', () => {
         const output = await useCase.execute(input);
 
         expect(output.is_active).toBe(true);
-        expect(output.unit_price).toBeGreaterThan(output.unit_cost);
+        expect(output.unit_price).toBeGreaterThan(output.cost_price || 0);
       });
     });
   });

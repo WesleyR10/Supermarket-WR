@@ -51,15 +51,17 @@ export class UpdateUnitCostUseCase
 
     // Regra: Verificar se o novo custo não é muito diferente do atual (variação > 50%)
     const currentCost = inventory.unit_cost;
-    const variation = Math.abs((unitCost - currentCost) / currentCost) * 100;
-    if (variation > 50) {
-      console.log(`Large cost variation detected: ${variation.toFixed(2)}% for item ${inventory.inventory_item_id.id}`);
+    if (currentCost) {
+      const variation = Math.abs((unitCost - currentCost) / currentCost) * 100;
+      if (variation > 50) {
+        console.log(`Large cost variation detected: ${variation.toFixed(2)}% for item ${inventory.inventory_item_id.id}`);
+      }
     }
 
     // Regra: Verificar se o custo não é maior que o preço de venda (margem negativa)
-    if (unitCost > inventory.unit_price) {
+    if (inventory.unit_price && unitCost > inventory.unit_price.value) {
       inventory.notification.addError(
-        `Unit cost (${unitCost}) cannot be higher than unit price (${inventory.unit_price})`,
+        `Unit cost (${unitCost}) cannot be higher than unit price (${inventory.unit_price.value})`,
         'unit_cost'
       );
     }

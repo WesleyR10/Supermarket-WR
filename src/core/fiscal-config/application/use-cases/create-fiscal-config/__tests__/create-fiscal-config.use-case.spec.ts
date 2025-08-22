@@ -1,8 +1,8 @@
 
 import { CreateFiscalConfigUseCase } from '../create-fiscal-config.use-case';
 import { EntityValidationError } from '../../../../../shared/domain/validators/validation.error';
-import { FiscalConfigType } from '@core/fiscal-config/domain/fiscal-config.aggregate';
-import { FiscalConfigInMemoryRepository } from '@core/fiscal-config/infra/db/in-memory/fiscal-config-in-memory.repository';
+import { FiscalConfigType } from '../../../../domain/fiscal-config.aggregate';
+import { FiscalConfigInMemoryRepository } from '../../../../infra/db/in-memory/fiscal-config-in-memory.repository';
 
 describe('CreateFiscalConfigUseCase Unit Tests', () => {
   let useCase: CreateFiscalConfigUseCase;

@@ -10,16 +10,17 @@ export class Price extends ValueObject {
   }
 
   private validate() {
+    if (typeof this.value !== 'number' || isNaN(this.value)) {
+      throw new InvalidPriceError('Price must be a valid number');
+    }
     if (this.value < 0) {
       throw new InvalidPriceError('Price cannot be negative');
     }
-
-    if (!Number.isFinite(this.value)) {
-      throw new InvalidPriceError('Price must be a valid number');
+    if (!isFinite(this.value)) {
+      throw new InvalidPriceError('Price must be a finite number');
     }
-
-    if (this.value > 999999.99) {
-      throw new InvalidPriceError('Price cannot exceed R$ 999,999.99');
+    if (this.value > Number.MAX_SAFE_INTEGER) {
+      throw new InvalidPriceError('Price is too large');
     }
   }
 

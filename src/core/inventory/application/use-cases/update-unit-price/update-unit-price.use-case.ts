@@ -50,7 +50,7 @@ export class UpdateUnitPriceUseCase
     }
 
     // Regra: Verificar se o novo preço não é menor que o custo (margem negativa)
-    if (unitPrice < inventory.unit_cost) {
+    if (inventory.unit_cost && unitPrice < inventory.unit_cost) {
       inventory.notification.addError(
         `Unit price (${unitPrice}) cannot be lower than unit cost (${inventory.unit_cost})`,
         'unit_price'
@@ -59,18 +59,22 @@ export class UpdateUnitPriceUseCase
 
     // Regra: Verificar se a variação de preço não é muito grande (> 100%)
     const currentPrice = inventory.unit_price;
-    const variation = Math.abs((unitPrice - currentPrice) / currentPrice) * 100;
-    if (variation > 100) {
-      console.log(`Large price variation detected: ${variation.toFixed(2)}% for item ${inventory.inventory_item_id.id}`);
+    if (currentPrice) {
+      const variation = Math.abs((unitPrice - currentPrice.value) / currentPrice.value) * 100;
+      if (variation > 100) {
+        console.log(`Large price variation detected: ${variation.toFixed(2)}% for item ${inventory.inventory_item_id.id}`);
+      }
     }
 
     // Regra: Verificar margem de lucro mínima (pelo menos 5%)
-    const profitMargin = ((unitPrice - inventory.unit_cost) / unitPrice) * 100;
-    if (profitMargin < 5) {
-      inventory.notification.addError(
-        `Profit margin (${profitMargin.toFixed(2)}%) is below minimum required (5%)`,
-        'unit_price'
-      );
+    if (inventory.unit_cost) {
+      const profitMargin = ((unitPrice - inventory.unit_cost) / unitPrice) * 100;
+      if (profitMargin < 5) {
+        inventory.notification.addError(
+          `Profit margin (${profitMargin.toFixed(2)}%) is below minimum required (5%)`,
+          'unit_price'
+        );
+      }
     }
   }
 }

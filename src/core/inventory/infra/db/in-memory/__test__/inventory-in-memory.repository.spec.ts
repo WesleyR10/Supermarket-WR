@@ -28,6 +28,7 @@ describe('InventoryInMemoryRepository Unit Tests', () => {
 
     it('should filter by location', async () => {
       const targetLocation = 'A-1-2';
+      const expectedLocationCode = 'A-1'; // location_code agora retorna apenas corredor-seção
       const items = [
         Inventory.fake().anInventory().withStoreId(storeId).withLocation(targetLocation).build(),
         Inventory.fake().anInventory().withStoreId(storeId).withLocation('C-3-4').build(),
@@ -35,10 +36,10 @@ describe('InventoryInMemoryRepository Unit Tests', () => {
       ];
       repository.items = items;
 
-      const params = InventorySearchParams.create({ filter: { store_id: storeId, location: targetLocation } });
+      const params = InventorySearchParams.create({ filter: { store_id: storeId, location: expectedLocationCode } });
       const result = await repository.search(params);
       expect(result.items).toHaveLength(2);
-      expect(result.items.every(item => item.location_code === targetLocation)).toBe(true);
+      expect(result.items.every(item => item.location_code === expectedLocationCode)).toBe(true);
     });
 
     it('should filter by low_stock', async () => {
@@ -104,6 +105,7 @@ describe('InventoryInMemoryRepository Unit Tests', () => {
   describe('domain-specific methods', () => {
     it('should find items by location', async () => {
       const targetLocation = 'A-1-2';
+      const expectedLocationCode = 'A-1'; // location_code agora retorna apenas corredor-seção
       const items = [
         Inventory.fake().anInventory().withStoreId(storeId).withLocation(targetLocation).build(),
         Inventory.fake().anInventory().withStoreId(storeId).withLocation('C-3-4').build(),
@@ -111,9 +113,9 @@ describe('InventoryInMemoryRepository Unit Tests', () => {
       ];
       repository.items = items;
 
-      const result = await repository.findByLocation(storeId, targetLocation);
+      const result = await repository.findByLocation(storeId, expectedLocationCode);
       expect(result).toHaveLength(1);
-      expect(result[0].location_code).toBe(targetLocation);
+      expect(result[0].location_code).toBe(expectedLocationCode);
       expect(result[0].store_id).toBe(storeId);
     });
 

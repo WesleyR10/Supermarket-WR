@@ -24,7 +24,7 @@ describe('SetLocationUseCase Unit Tests', () => {
       max_stock: 200,
       unit_cost: 10.50,
       unit_price: 15.75,
-      location_code: 'A1-B2',
+      location: 'A1-B2',
       is_active: true
     });
     repository.items.push(inventory);
@@ -39,7 +39,7 @@ describe('SetLocationUseCase Unit Tests', () => {
 
       const output = await useCase.execute(input);
 
-      expect(output.location_code).toBe('C3-D4');
+      expect(output.location).toBe('C3-D4-1');
       expect(output.id).toBe(inventory.inventory_item_id.id);
     });
 
@@ -74,13 +74,13 @@ describe('SetLocationUseCase Unit Tests', () => {
       await expect(useCase.execute(input)).rejects.toThrow(EntityValidationError);
     });
 
-    it('should throw EntityValidationError when location code format is invalid', async () => {
+    it('should throw InvalidLocationError when location code format is invalid', async () => {
       const input = new SetLocationInput({
         inventory_item_id: inventory.inventory_item_id.id,
-        location_code: 'invalid-format'
+        location_code: 'invalid' // Formato inválido: apenas 1 parte
       });
 
-      await expect(useCase.execute(input)).rejects.toThrow(EntityValidationError);
+      await expect(useCase.execute(input)).rejects.toThrow('Location string must have at least aisle and section');
     });
 
     // Testes de integração com repositório
@@ -94,7 +94,7 @@ describe('SetLocationUseCase Unit Tests', () => {
         await useCase.execute(input);
 
         const updatedInventory = await repository.findById(inventory.inventory_item_id);
-        expect(updatedInventory!.location_code).toBe('E5-F6');
+        expect(updatedInventory!.location_code).toBe('E5-F6-1');
       });
     });
 
@@ -108,7 +108,7 @@ describe('SetLocationUseCase Unit Tests', () => {
 
         const output = await useCase.execute(input);
 
-        expect(output.location_code).toBe('B2-C3');
+        expect(output.location).toBe('B2-C3-1');
       });
 
       it('should log location changes for audit', async () => {
@@ -136,7 +136,7 @@ describe('SetLocationUseCase Unit Tests', () => {
 
         const output = await useCase.execute(input);
 
-        expect(output.location_code).toBe('S1-S2');
+        expect(output.location).toBe('S1-S2-1');
       });
 
       it('should handle moving to promotional areas', async () => {
@@ -147,7 +147,7 @@ describe('SetLocationUseCase Unit Tests', () => {
 
         const output = await useCase.execute(input);
 
-        expect(output.location_code).toBe('P1-P2');
+        expect(output.location).toBe('P1-P2-1');
       });
 
       it('should handle moving to checkout areas', async () => {
@@ -158,7 +158,7 @@ describe('SetLocationUseCase Unit Tests', () => {
 
         const output = await useCase.execute(input);
 
-        expect(output.location_code).toBe('C1-C2');
+        expect(output.location).toBe('C1-C2-1');
       });
     });
   });

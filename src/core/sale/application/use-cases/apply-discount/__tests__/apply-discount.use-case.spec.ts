@@ -35,7 +35,8 @@ describe('ApplyDiscountUseCase Unit Tests', () => {
     it('should not apply discount when discount amount is R$ 0.00', async () => {
       const input = new ApplyDiscountInput({
         sale_id: sale.sale_id.id,
-        reason: 'No discount applied - testing base values'
+        reason: 'No discount applied - testing base values',
+        store_id: 'store-123'
       });
 
       const output = await useCase.execute(input);
@@ -49,6 +50,7 @@ describe('ApplyDiscountUseCase Unit Tests', () => {
     it('should apply percentage discount successfully', async () => {
       const input = new ApplyDiscountInput({
         sale_id: sale.sale_id.id,
+        store_id: 'store-123',
         discount_percentage: 15,
         reason: 'Customer loyalty discount'
       });
@@ -64,6 +66,7 @@ describe('ApplyDiscountUseCase Unit Tests', () => {
     it('should apply amount discount successfully', async () => {
       const input = new ApplyDiscountInput({
         sale_id: sale.sale_id.id,
+        store_id: 'store-123',
         discount_amount: 5.00,
         reason: 'Manager authorization'
       });
@@ -82,6 +85,7 @@ describe('ApplyDiscountUseCase Unit Tests', () => {
 
       const input = new ApplyDiscountInput({
         sale_id: sale.sale_id.id,
+        store_id: 'store-123',
         discount_percentage: 10
       });
 
@@ -91,6 +95,7 @@ describe('ApplyDiscountUseCase Unit Tests', () => {
     it('should throw error when both discount types provided', async () => {
       const input = new ApplyDiscountInput({
         sale_id: sale.sale_id.id,
+        store_id: 'store-123',
         discount_percentage: 10,
         discount_amount: 5.00
       });
@@ -144,6 +149,7 @@ describe('ApplyDiscountUseCase Unit Tests', () => {
         // Aplicar desconto de funcionário (10%)
         const input = new ApplyDiscountInput({
           sale_id: realSale.sale_id.id,
+          store_id: 'store-123',
           discount_percentage: 10,
           reason: 'Employee discount'
         });
@@ -181,6 +187,7 @@ describe('ApplyDiscountUseCase Unit Tests', () => {
         // Aplicar desconto fixo de R$ 7,00
         const input = new ApplyDiscountInput({
           sale_id: bulkSale.sale_id.id,
+          store_id: 'store-123',
           discount_amount: 7.00,
           reason: 'Bulk purchase promotion - Buy 12 pay 10'
         });

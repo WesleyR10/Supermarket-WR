@@ -10,7 +10,10 @@ const config: Config = {
   rootDir: 'src',
   testRegex: '.*\\..*spec\\.ts$',
   transform: {
-    '^.+\\.(t|j)s$': '@swc/jest',
+    '^.+\\.(t|j)s$': 'ts-jest',
+  },
+  moduleNameMapper: {
+    '^@core/(.*)$': '<rootDir>/core/$1',
   },
   collectCoverageFrom: ['**/*.(t|j)s'],
   coverageDirectory: '../coverage',
@@ -34,9 +37,10 @@ const config: Config = {
     },
   },
   testEnvironment: 'node',
+  setupFiles: ['reflect-metadata'],
   setupFilesAfterEnv: ['./core/shared/infra/testing/expect-helpers.ts'],
   coverageProvider: 'v8',
   clearMocks: true,
 };
 
-export default config; 
+export default config;

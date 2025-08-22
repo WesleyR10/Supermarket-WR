@@ -50,9 +50,9 @@ export class RemoveStockUseCase
     }
 
     // Regra: Verificar se há quantidade suficiente
-    if (quantity > inventory.quantity) {
+    if (quantity > inventory.quantity.value) {
       inventory.notification.addError(
-        `Cannot remove ${quantity} units. Only ${inventory.quantity} units available`,
+        `Cannot remove ${quantity} units. Only ${inventory.quantity.value} units available`,
         'quantity'
       );
     }
