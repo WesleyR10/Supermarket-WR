@@ -1,7 +1,7 @@
-import { FiscalConfigInMemoryRepository } from './fiscal-config-in-memory.repository';
-import { FiscalConfigType } from '../../../domain/fiscal-config.aggregate';
-import { FiscalConfigFakeBuilder } from '../../../domain/fiscal-config-fake.builder';
-import { FiscalConfigSearchParams } from '../../../domain/repositories/fiscal-config.repository.interface';
+import { FiscalConfigInMemoryRepository } from '../fiscal-config-in-memory.repository';
+import { FiscalConfigType } from '../../../../domain/fiscal-config.aggregate';
+import { FiscalConfigFakeBuilder } from '../../../../domain/fiscal-config-fake.builder';
+import { FiscalConfigSearchParams } from '../../../../domain/repositories/fiscal-config.repository.interface';
 
 describe('FiscalConfigInMemoryRepository', () => {
   let repository: FiscalConfigInMemoryRepository;

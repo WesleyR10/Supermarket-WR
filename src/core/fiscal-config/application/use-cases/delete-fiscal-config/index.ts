@@ -1,0 +1,1 @@
+export * from './delete-fiscal-config.use-case';
