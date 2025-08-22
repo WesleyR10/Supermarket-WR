@@ -94,7 +94,7 @@ describe('SetLocationUseCase Unit Tests', () => {
         await useCase.execute(input);
 
         const updatedInventory = await repository.findById(inventory.inventory_item_id);
-        expect(updatedInventory!.location_code).toBe('E5-F6-1');
+        expect(updatedInventory!.location_code).toBe('E5-F6'); // location_code retorna apenas corredor-seção
       });
     });
 

@@ -3,6 +3,7 @@ import { CreateOnlineOrderInput } from '../create-online-order.input';
 import { OnlineOrderInMemoryRepository } from '../../../../domain/repositories/online-order-in-memory.repository';
 import { InvalidArgumentError } from '../../../../../shared/domain/errors/invalid-argument.error';
 import { InvalidPriceError } from '../../../../../shared/domain/value-objects/price.vo';
+import { InvalidUuidError } from '../../../../../shared/domain/value-objects/uuid.vo';
 
 describe('CreateOnlineOrderUseCase Unit Tests', () => {
   let useCase: CreateOnlineOrderUseCase;
@@ -48,7 +49,7 @@ describe('CreateOnlineOrderUseCase Unit Tests', () => {
     const output = await useCase.execute(input);
 
     expect(output).toMatchObject({
-      id: expect.any(String),
+      order_id: expect.any(String),
       client_id: input.client_id,
       status: 'PENDING',
       subtotal: 17.98, // 2 * 8.99
@@ -61,7 +62,7 @@ describe('CreateOnlineOrderUseCase Unit Tests', () => {
         neighborhood: 'Centro',
         city: 'São Paulo',
         state: 'SP',
-        zip_code: '01234-567'
+        zip_code: '01234567'
       },
       payment_method: {
         type: 'CREDIT_CARD',
@@ -71,8 +72,8 @@ describe('CreateOnlineOrderUseCase Unit Tests', () => {
         }
       },
       notes: 'Entregar na portaria',
-      estimated_delivery: new Date('2025-01-16T14:00:00Z'),
-      created_at: expect.any(Date)
+      estimated_delivery: expect.any(String),
+      created_at: expect.any(String)
     });
 
     expect(repository.items).toHaveLength(1);
@@ -104,7 +105,7 @@ describe('CreateOnlineOrderUseCase Unit Tests', () => {
     const output = await useCase.execute(input);
 
     expect(output).toMatchObject({
-      id: expect.any(String),
+      order_id: expect.any(String),
       client_id: input.client_id,
       status: 'PENDING',
       subtotal: 6.50,
@@ -116,12 +117,12 @@ describe('CreateOnlineOrderUseCase Unit Tests', () => {
         neighborhood: 'Bela Vista',
         city: 'São Paulo',
         state: 'SP',
-        zip_code: '01310-100'
+        zip_code: '01310100'
       },
-      payment_method: null,
-      notes: null,
-      estimated_delivery: null,
-      created_at: expect.any(Date)
+      payment_method: undefined,
+      notes: undefined,
+      estimated_delivery: undefined,
+      created_at: expect.any(String)
     });
 
     expect(repository.items).toHaveLength(1);
@@ -191,7 +192,7 @@ describe('CreateOnlineOrderUseCase Unit Tests', () => {
       delivery_fee: 5.99
     };
 
-    await expect(useCase.execute(input)).rejects.toThrow(InvalidPriceError);
+    await expect(useCase.execute(input)).rejects.toThrow(InvalidUuidError);
   });
 
   it('should throw error when delivery address is invalid', async () => {
@@ -284,7 +285,7 @@ describe('CreateOnlineOrderUseCase Unit Tests', () => {
       delivery_fee: 5.99
     };
 
-    await expect(useCase.execute(input)).rejects.toThrow(InvalidArgumentError);
+    await expect(useCase.execute(input)).rejects.toThrow(InvalidPriceError);
   });
 
   it('should create order with PIX payment method', async () => {

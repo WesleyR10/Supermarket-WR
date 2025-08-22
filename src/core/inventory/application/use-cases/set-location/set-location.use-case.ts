@@ -39,7 +39,7 @@ export class SetLocationUseCase
     // Retornar output
     const output = InventoryOutputMapper.toOutput(inventory);
     if (inventory.location) {
-      output.location = inventory.location.getAisleSectionCode();
+      output.location = inventory.location.getFullLocation();
     }
     return output;
   }

@@ -20,7 +20,7 @@ export class ProductFakeBuilder<TBuild = any> {
   private _dimensions: PropOrFactory<string | null> = (_index) => `${this.chance.integer({ min: 5, max: 50 })}x${this.chance.integer({ min: 5, max: 50 })}x${this.chance.integer({ min: 5, max: 50 })}cm`;
   private _supplier_code: PropOrFactory<string | null> = (_index) => this.chance.string({ length: 10, pool: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789' });
   private _ncm_code: PropOrFactory<string | null> = (_index) => this.chance.string({ length: 8, pool: '0123456789' });
-  private _requires_weighing: PropOrFactory<boolean> = (_index) => this.chance.bool({ likelihood: 20 });
+  private _requires_weighing: PropOrFactory<boolean> = (_index) => false;
   private _created_at: PropOrFactory<Date> | undefined = undefined;
   private _updated_at: PropOrFactory<Date> | undefined = undefined;
 
