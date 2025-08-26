@@ -4,7 +4,7 @@ import { EmployeeDepartment, EmployeeRole } from './employee.enums';
 
 export class EmployeeFakeBuilder {
   private _employee_id: EmployeeId;
-  private _stores_id: string;
+  private _store_id: string;
   private _name: string;
   private _email: string;
   private _password_hash: string;
@@ -23,7 +23,7 @@ export class EmployeeFakeBuilder {
 
   constructor() {
     this._employee_id = new EmployeeId();
-    this._stores_id = new Uuid().id;
+    this._store_id = new Uuid().id;
     this._name = 'João Silva';
     this._email = 'joao.silva@supermercado.com';
     this._password_hash = '$2b$10$hashedpassword123456789';
@@ -56,8 +56,8 @@ export class EmployeeFakeBuilder {
     return this;
   }
 
-  stores_id(value: string): EmployeeFakeBuilder {
-    this._stores_id = value;
+  store_id(value: string): EmployeeFakeBuilder {
+    this._store_id = value;
     return this;
   }
 
@@ -133,6 +133,26 @@ export class EmployeeFakeBuilder {
 
   updated_at(value: Date): EmployeeFakeBuilder {
     this._updated_at = value;
+    return this;
+  }
+
+  // Método principal para criar um funcionário padrão
+  static aEmployee(): EmployeeFakeBuilder {
+    return new EmployeeFakeBuilder();
+  }
+
+  withEmail(value: string): EmployeeFakeBuilder {
+    this._email = value;
+    return this;
+  }
+
+  withStoreId(value: string): EmployeeFakeBuilder {
+    this._store_id = value;
+    return this;
+  }
+
+  withEmployeeCode(value: string): EmployeeFakeBuilder {
+    this._employee_code = value;
     return this;
   }
 
@@ -228,7 +248,7 @@ export class EmployeeFakeBuilder {
   build(): Employee {
     const props: EmployeeConstructorProps = {
       employee_id: this._employee_id,
-      stores_id: this._stores_id,
+      store_id: this._store_id,
       name: this._name,
       email: this._email,
       password_hash: this._password_hash,
@@ -276,4 +296,4 @@ export class EmployeeFakeBuilder {
       new EmployeeFakeBuilder().asOperator().name('Operador Estoque').build(),
     ];
   }
-} 
+}

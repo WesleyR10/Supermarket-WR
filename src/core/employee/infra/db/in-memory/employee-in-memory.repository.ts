@@ -42,7 +42,7 @@ export class EmployeeInMemoryRepository
     }
 
     return items.filter((item) => {
-      const matchesStoreId = !filter.stores_id || item.stores_id === filter.stores_id;
+      const matchesStoreId = !filter.store_id || item.store_id === filter.store_id;
       const matchesName = !filter.name || item.name.toLowerCase().includes(filter.name.toLowerCase());
       const matchesEmail = !filter.email || item.email.toLowerCase().includes(filter.email.toLowerCase());
       const matchesRole = !filter.role || item.role === filter.role;
@@ -80,7 +80,7 @@ export class EmployeeInMemoryRepository
   // Métodos específicos do domínio de supermercado
   
   async findByStore(storeId: string): Promise<Employee[]> {
-    return this.items.filter((employee) => employee.stores_id === storeId);
+    return this.items.filter((employee) => employee.store_id === storeId);
   }
 
   async findByRole(role: EmployeeRole): Promise<Employee[]> {
@@ -204,8 +204,8 @@ export class EmployeeInMemoryRepository
     const storeCount = new Map<string, number>();
     
     this.items.forEach((employee) => {
-      const count = storeCount.get(employee.stores_id) || 0;
-      storeCount.set(employee.stores_id, count + 1);
+      const count = storeCount.get(employee.store_id) || 0;
+      storeCount.set(employee.store_id, count + 1);
     });
     
     return Array.from(storeCount.entries()).map(([store_id, count]) => ({ store_id, count }));

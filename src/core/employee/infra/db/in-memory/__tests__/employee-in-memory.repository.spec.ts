@@ -1,8 +1,8 @@
-import { EmployeeInMemoryRepository } from './employee-in-memory.repository';
-import { Employee } from '../../../domain/employee.aggregate';
-import { EmployeeRole, EmployeeDepartment } from '../../../domain/employee.enums';
-import { EmployeeFakeBuilder } from '../../../domain/employee-fake.builder';
-import { EmployeeSearchParams } from '../../../domain/repositories/employee.repository';
+import { EmployeeInMemoryRepository } from '../employee-in-memory.repository';
+import { Employee } from '../../../../domain/employee.aggregate';
+import { EmployeeRole, EmployeeDepartment } from '../../../../domain/employee.enums';
+import { EmployeeFakeBuilder } from '../../../../domain/employee-fake.builder';
+import { EmployeeSearchParams } from '../../../../domain/repositories/employee.repository';
 
 describe('EmployeeInMemoryRepository', () => {
   let repository: EmployeeInMemoryRepository;
@@ -16,35 +16,35 @@ describe('EmployeeInMemoryRepository', () => {
     // 5 funcionários ativos para store-1
     employees.push(
       new EmployeeFakeBuilder()
-        .stores_id('store-1')
+        .store_id('store-1')
         .name('Admin Principal')
         .email('admin@supermercado.com')
         .employee_code('EMP001')
         .asAdmin()
         .build(),
       new EmployeeFakeBuilder()
-        .stores_id('store-1')
+        .store_id('store-1')
         .name('Gerente Loja 1')
         .email('gerente1@supermercado.com')
         .employee_code('EMP002')
         .asManager()
         .build(),
       new EmployeeFakeBuilder()
-        .stores_id('store-1')
+        .store_id('store-1')
         .name('Caixa 1')
         .email('caixa1@supermercado.com')
         .employee_code('EMP003')
         .asCashier()
         .build(),
       new EmployeeFakeBuilder()
-        .stores_id('store-1')
+        .store_id('store-1')
         .name('Caixa 2')
         .email('caixa2@supermercado.com')
         .employee_code('EMP004')
         .asCashier()
         .build(),
       new EmployeeFakeBuilder()
-        .stores_id('store-1')
+        .store_id('store-1')
         .name('Operador Estoque 1')
         .email('operador1@supermercado.com')
         .employee_code('EMP005')
@@ -55,28 +55,28 @@ describe('EmployeeInMemoryRepository', () => {
     // 4 funcionários ativos para store-2
     employees.push(
       new EmployeeFakeBuilder()
-        .stores_id('store-2')
+        .store_id('store-2')
         .name('Gerente Loja 2')
         .email('gerente2@supermercado.com')
         .employee_code('EMP006')
         .asManager()
         .build(),
       new EmployeeFakeBuilder()
-        .stores_id('store-2')
+        .store_id('store-2')
         .name('Caixa 3')
         .email('caixa3@supermercado.com')
         .employee_code('EMP007')
         .asCashier()
         .build(),
       new EmployeeFakeBuilder()
-        .stores_id('store-2')
+        .store_id('store-2')
         .name('Operador Estoque 2')
         .email('operador2@supermercado.com')
         .employee_code('EMP008')
         .asOperator()
         .build(),
       new EmployeeFakeBuilder()
-        .stores_id('store-2')
+        .store_id('store-2')
         .name('Funcionário Novo')
         .email('novo@supermercado.com')
         .employee_code('EMP009')
@@ -88,7 +88,7 @@ describe('EmployeeInMemoryRepository', () => {
     // 3 funcionários inativos para store-1
     employees.push(
       new EmployeeFakeBuilder()
-        .stores_id('store-1')
+        .store_id('store-1')
         .name('Ex-Funcionário 1')
         .email('ex1@supermercado.com')
         .employee_code('EMP010')
@@ -96,7 +96,7 @@ describe('EmployeeInMemoryRepository', () => {
         .inactive()
         .build(),
       new EmployeeFakeBuilder()
-        .stores_id('store-1')
+        .store_id('store-1')
         .name('Ex-Funcionário 2')
         .email('ex2@supermercado.com')
         .employee_code('EMP011')
@@ -104,7 +104,7 @@ describe('EmployeeInMemoryRepository', () => {
         .inactive()
         .build(),
       new EmployeeFakeBuilder()
-        .stores_id('store-1')
+        .store_id('store-1')
         .name('Ex-Gerente')
         .email('exgerente@supermercado.com')
         .employee_code('EMP012')
@@ -116,7 +116,7 @@ describe('EmployeeInMemoryRepository', () => {
     // 2 funcionários com características especiais
     employees.push(
       new EmployeeFakeBuilder()
-        .stores_id('store-1')
+        .store_id('store-1')
         .name('Funcionário Alto Salário')
         .email('alto.salario@supermercado.com')
         .employee_code('EMP013')
@@ -124,7 +124,7 @@ describe('EmployeeInMemoryRepository', () => {
         .withHighSalary()
         .build(),
       new EmployeeFakeBuilder()
-        .stores_id('store-2')
+        .store_id('store-2')
         .name('Funcionário Email Pessoal')
         .email('pessoal@gmail.com')
         .employee_code('EMP014')
@@ -136,7 +136,7 @@ describe('EmployeeInMemoryRepository', () => {
     // 1 funcionário sem login recente
     employees.push(
       new EmployeeFakeBuilder()
-        .stores_id('store-1')
+        .store_id('store-1')
         .name('Funcionário Sem Login')
         .email('semlogin@supermercado.com')
         .employee_code('EMP015')
@@ -400,14 +400,14 @@ describe('EmployeeInMemoryRepository', () => {
         per_page: 20,
         sort: null,
         sort_dir: null,
-        filter: { stores_id: 'store-1' },
+        filter: { store_id: 'store-1' },
       });
       
       const result = await repository.search(searchParams);
       
       expect(result.items.length).toBe(10);
       result.items.forEach(employee => {
-        expect(employee.stores_id).toBe('store-1');
+        expect(employee.store_id).toBe('store-1');
       });
     });
 

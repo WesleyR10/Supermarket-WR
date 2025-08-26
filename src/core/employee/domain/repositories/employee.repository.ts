@@ -5,7 +5,7 @@ import { Employee, EmployeeId} from '../employee.aggregate';
 import { EmployeeDepartment, EmployeeRole } from '../employee.enums';
 
 export type EmployeeFilter = {
-  stores_id?: string;
+  store_id?: string;
   name?: string;
   email?: string;
   role?: EmployeeRole;
@@ -30,7 +30,7 @@ export class EmployeeSearchParams extends SearchParams<EmployeeFilter> {
         : value;
 
     const filter = {
-      ...(_value && _value.stores_id && { stores_id: `${_value.stores_id}` }),
+      ...(_value && _value.store_id && { store_id: `${_value.store_id}` }),
       ...(_value && _value.name && { name: `${_value.name}` }),
       ...(_value && _value.email && { email: `${_value.email}` }),
       ...(_value && _value.role && { role: _value.role }),

@@ -1,8 +1,9 @@
-import { EmployeeRole, EmployeeDepartment, Employee } from '../../../domain/employee.aggregate';
+import { Employee } from '../../../domain/employee.aggregate';
+import { EmployeeRole, EmployeeDepartment } from '../../../domain/employee.enums';
 
 export type EmployeeOutput = {
   id: string;
-  stores_id: string;
+  store_id: string;
   name: string;
   email: string;
   employee_code: string | null;

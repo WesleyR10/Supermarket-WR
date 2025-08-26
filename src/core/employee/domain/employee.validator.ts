@@ -5,8 +5,8 @@ import { ClassValidatorFields } from '../../shared/domain/validators/class-valid
 import { Notification } from '../../shared/domain/validators/notification';
 
 export class EmployeeRules {
-  @IsUUID(4, { groups: ['stores_id'] })
-  stores_id: string;
+  @IsUUID(4, { groups: ['store_id'] })
+  store_id: string;
 
   @Length(2, 100, { groups: ['name'] })
   name: string;
@@ -39,7 +39,7 @@ export class EmployeeRules {
 export class EmployeeValidator extends ClassValidatorFields {
   validate(notification: Notification, data: any, fields?: string[]): boolean {
     const newFields = fields?.length ? fields : [
-      'stores_id',
+      'store_id',
       'name',
       'email',
       'password_hash',

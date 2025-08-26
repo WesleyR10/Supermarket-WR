@@ -7,7 +7,7 @@ import { EmployeeRole, EmployeeDepartment } from './employee.enums';
 
 export type EmployeeConstructorProps = {
   employee_id?: EmployeeId;
-  stores_id: string;
+  store_id: string;
   name: string;
   email: string;
   password_hash: string;
@@ -29,7 +29,7 @@ export class EmployeeId extends Uuid {}
 
 export class Employee extends AggregateRoot {
   employee_id: EmployeeId;
-  stores_id: string;
+  store_id: string;
   name: string;
   email: string;
   password_hash: string;
@@ -49,7 +49,7 @@ export class Employee extends AggregateRoot {
   constructor(props: EmployeeConstructorProps) {
     super();
     this.employee_id = props.employee_id ?? new EmployeeId();
-    this.stores_id = props.stores_id;
+    this.store_id = props.store_id;
     this.name = props.name;
     this.email = props.email;
     this.password_hash = props.password_hash;
@@ -229,7 +229,7 @@ export class Employee extends AggregateRoot {
   toJSON() {
     return {
       employee_id: this.employee_id.toString(),
-      stores_id: this.stores_id,
+      store_id: this.store_id,
       name: this.name,
       email: this.email,
       employee_code: this.employee_code,
