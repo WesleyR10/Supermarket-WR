@@ -19,7 +19,7 @@ import {
 
 export type UpdateClientInputConstructorProps = {
   id: string;
-  stores_id: string;
+  store_id: string;
   customer_type?: CustomerType;
   credit_limit?: number | null;
   preferred_contact_method?: ContactMethod;
@@ -40,7 +40,7 @@ export class UpdateClientInput {
 
   @IsUUID()
   @IsNotEmpty()
-  stores_id: string;
+  store_id: string;
 
   @IsEnum(CustomerType)
   @IsOptional()
@@ -91,7 +91,7 @@ export class UpdateClientInput {
   constructor(props?: UpdateClientInputConstructorProps) {
     if (!props) return;
     this.id = props.id;
-    this.stores_id = props.stores_id;
+    this.store_id = props.store_id;
     this.customer_type = props.customer_type;
     this.credit_limit = props.credit_limit;
     this.preferred_contact_method = props.preferred_contact_method;

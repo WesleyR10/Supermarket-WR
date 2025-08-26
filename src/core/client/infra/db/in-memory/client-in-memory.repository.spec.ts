@@ -29,7 +29,7 @@ describe('ClientInMemoryRepository', () => {
       expect(itemsFiltered).toStrictEqual([items[0]]);
     });
 
-    it('should filter by stores_id', async () => {
+    it('should filter by store_id', async () => {
       const items = [
         Client.fake().aClient().withStoresId('store-123').build(),
         Client.fake().aClient().withStoresId('store-456').build(),
@@ -252,7 +252,7 @@ describe('ClientInMemoryRepository', () => {
       it('should find clients by store id', async () => {
         const result = await repository.findByStoreId('store-1');
         expect(result).toHaveLength(8); // 6 ativos + 2 inativos (adicionamos 1 cliente para spending range)
-        expect(result.every(client => client.stores_id === 'store-1')).toBe(true);
+        expect(result.every(client => client.store_id === 'store-1')).toBe(true);
       });
     });
 
@@ -277,7 +277,7 @@ describe('ClientInMemoryRepository', () => {
         const result = await repository.findByUserIdAndStoreId('user-1', 'store-1');
         expect(result).not.toBeNull();
         expect(result!.user_id).toBe('user-1');
-        expect(result!.stores_id).toBe('store-1');
+        expect(result!.store_id).toBe('store-1');
       });
 
       it('should return null when client not found', async () => {

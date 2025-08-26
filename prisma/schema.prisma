@@ -433,7 +433,7 @@ model User {
 model Client {
   client_id String @id @default(uuid())
   user_id   String // FK → User (dados globais)
-  stores_id String // FK → Stores (isolamento por loja)
+  store_id  String // FK → Stores (isolamento por loja)
 
   // Programa de fidelidade (específico por loja)
   loyalty_points      Int          @default(0)
@@ -467,17 +467,17 @@ model Client {
 
   // Relacionamentos
   user      User      @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
-  stores    Stores    @relation(fields: [stores_id], references: [store_id], onDelete: Cascade)
+  stores    Stores    @relation(fields: [store_id], references: [store_id], onDelete: Cascade)
   addresses Address[] @relation("ClientAddresses")
   orders    Order[]
   sales     Sale[]    @relation("ClientSales")
 
   // Unique constraint: Um User só pode ter um Client por loja
-  @@unique([user_id, stores_id])
+  @@unique([user_id, store_id])
   // Índices para performance
-  @@index([stores_id, is_active]) // Clientes ativos por loja
-  @@index([loyalty_level, stores_id]) // Níveis de fidelidade por loja
-  @@index([customer_type, stores_id]) // Tipos de cliente por loja
+  @@index([store_id, is_active]) // Clientes ativos por loja
+  @@index([loyalty_level, store_id]) // Níveis de fidelidade por loja
+  @@index([customer_type, store_id]) // Tipos de cliente por loja
   @@index([user_id]) // Busca rápida por usuário global
   @@index([loyalty_card_number]) // Busca por cartão fidelidade
   @@map("clients")
@@ -519,7 +519,7 @@ enum EmployeeDepartment {
 
 model Employee {
   employee_id String @id @default(uuid())
-  stores_id   String // FK → Stores
+  store_id    String // FK → Stores
 
   // Dados profissionais
   name          String
@@ -543,13 +543,13 @@ model Employee {
   fired_at   DateTime?
 
   // Relacionamentos
-  stores Stores @relation(fields: [stores_id], references: [store_id], onDelete: Cascade)
+  stores Stores @relation(fields: [store_id], references: [store_id], onDelete: Cascade)
 
   // Índices
-  @@index([stores_id, is_active]) // Funcionários ativos por loja
+  @@index([store_id, is_active]) // Funcionários ativos por loja
   @@index([email]) // Login
   @@index([employee_code]) // Busca por código
-  @@index([role, stores_id]) // Funcionários por cargo
+  @@index([role, store_id]) // Funcionários por cargo
   @@map("employees")
 }
 

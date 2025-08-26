@@ -14,7 +14,7 @@ export class CreateClientUseCase
     // Verificar se já existe um cliente para este usuário nesta loja
     const existingClient = await this.clientRepo.findByUserIdAndStoreId(
       input.user_id,
-      input.stores_id
+      input.store_id
     );
 
     if (existingClient) {

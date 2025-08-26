@@ -18,7 +18,7 @@ import {
 
 export type CreateClientInputConstructorProps = {
   user_id: string;
-  stores_id: string;
+  store_id: string;
   customer_type?: CustomerType;
   credit_limit?: number | null;
   preferred_contact_method?: ContactMethod;
@@ -38,7 +38,7 @@ export class CreateClientInput {
 
   @IsString()
   @IsNotEmpty()
-  stores_id: string;
+  store_id: string;
 
   @IsEnum(CustomerType)
   @IsOptional()
@@ -85,7 +85,7 @@ export class CreateClientInput {
   constructor(props?: CreateClientInputConstructorProps) {
     if (!props) return;
     this.user_id = props.user_id;
-    this.stores_id = props.stores_id;
+    this.store_id = props.store_id;
     this.customer_type = props.customer_type;
     this.credit_limit = props.credit_limit;
     this.preferred_contact_method = props.preferred_contact_method;

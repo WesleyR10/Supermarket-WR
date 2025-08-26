@@ -29,7 +29,7 @@ describe('Client Aggregate Unit Tests', () => {
 
       expect(client.client_id).toBeInstanceOf(ClientId);
       expect(client.user_id).toBe('user-123');
-      expect(client.stores_id).toBe('store-123');
+      expect(client.store_id).toBe('store-123');
       expect(client.loyalty_points).toBe(0);
       expect(client.loyalty_level).toBe(LoyaltyLevel.BRONZE);
       expect(client.loyalty_card_number).toBeNull();
@@ -76,7 +76,7 @@ describe('Client Aggregate Unit Tests', () => {
         .build();
 
       expect(client.user_id).toBe('user-456');
-      expect(client.stores_id).toBe('store-456');
+      expect(client.store_id).toBe('store-456');
       expect(client.loyalty_points).toBe(2500);
       expect(client.loyalty_level).toBe(LoyaltyLevel.SILVER);
       expect(client.loyalty_card_number).toBe('CARD123456');
@@ -98,7 +98,7 @@ describe('Client Aggregate Unit Tests', () => {
     test('should create client using static create method', () => {
       const client = Client.create({
         user_id: 'user-789',
-        stores_id: 'store-789',
+        store_id: 'store-789',
         customer_type: CustomerType.BUSINESS,
         credit_limit: 10000.00,
         preferred_contact_method: ContactMethod.WHATSAPP,
@@ -112,7 +112,7 @@ describe('Client Aggregate Unit Tests', () => {
       });
 
       expect(client.user_id).toBe('user-789');
-      expect(client.stores_id).toBe('store-789');
+      expect(client.store_id).toBe('store-789');
       expect(client.customer_type).toBe(CustomerType.BUSINESS);
       expect(client.credit_limit).toBe(10000.00);
       expect(client.preferred_contact_method).toBe(ContactMethod.WHATSAPP);
@@ -322,7 +322,7 @@ describe('Client Aggregate Unit Tests', () => {
     test('should have validation error without user_id', () => {
       // @ts-ignore user_id omitido intencionalmente
       const client = Client.create({
-        stores_id: 'store-123'
+        store_id: 'store-123'
       });
 
       expect(client.notification.hasErrors()).toBe(true);
@@ -330,15 +330,15 @@ describe('Client Aggregate Unit Tests', () => {
       expect(client.notification.errors.has('user_id')).toBe(true);
     });
 
-    test('should have validation error without stores_id', () => {
-      // @ts-ignore stores_id omitido intencionalmente
+    test('should have validation error without store_id', () => {
+      // @ts-ignore store_id omitido intencionalmente
       const client = Client.create({
         user_id: 'user-123'
       });
 
       expect(client.notification.hasErrors()).toBe(true);
       expect(client.notification.errors.size).toBe(1);
-      expect(client.notification.errors.has('stores_id')).toBe(true);
+      expect(client.notification.errors.has('store_id')).toBe(true);
     });
 
     test('should have validation error with invalid loyalty points', () => {
@@ -379,17 +379,17 @@ describe('Client Aggregate Unit Tests', () => {
         .withStoresId(storeId)
         .build();
 
-      expect(client.stores_id).toBe(storeId);
+      expect(client.store_id).toBe(storeId);
     });
 
     test('should validate store_id is required', () => {
-      // @ts-ignore stores_id omitido intencionalmente
+      // @ts-ignore store_id omitido intencionalmente
       const client = Client.create({
         user_id: 'user-123'
       });
 
       expect(client.notification.hasErrors()).toBe(true);
-      expect(client.notification.errors.has('stores_id')).toBe(true);
+      expect(client.notification.errors.has('store_id')).toBe(true);
     });
   });
 

@@ -2,7 +2,7 @@ import { IsNotEmpty, IsUUID, validateSync } from 'class-validator';
 
 export type ActivateClientInputConstructorProps = {
   id: string;
-  stores_id: string;
+  store_id: string;
 };
 
 export class ActivateClientInput {
@@ -12,12 +12,12 @@ export class ActivateClientInput {
 
   @IsUUID()
   @IsNotEmpty()
-  stores_id: string;
+  store_id: string;
 
   constructor(props?: ActivateClientInputConstructorProps) {
     if (!props) return;
     this.id = props.id;
-    this.stores_id = props.stores_id;
+    this.store_id = props.store_id;
   }
 }
 

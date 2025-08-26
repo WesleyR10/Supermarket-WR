@@ -26,7 +26,7 @@ describe('GetClientUseCase Unit Tests', () => {
 
       const input = new GetClientInput({
         id: client.client_id.id,
-        stores_id: 'store-123',
+        store_id: 'store-123',
       });
 
       const output = await useCase.execute(input);
@@ -34,7 +34,7 @@ describe('GetClientUseCase Unit Tests', () => {
       expect(output).toStrictEqual({
         id: client.client_id.id,
         user_id: 'user-123',
-        stores_id: 'store-123',
+        store_id: 'store-123',
         customer_type: client.customer_type,
         loyalty_points: client.loyalty_points,
         loyalty_level: client.loyalty_level,
@@ -62,7 +62,7 @@ describe('GetClientUseCase Unit Tests', () => {
       const fakeId = '550e8400-e29b-41d4-a716-446655440000';
       const input = new GetClientInput({
         id: fakeId,
-        stores_id: 'store-123',
+        store_id: 'store-123',
       });
 
       await expect(() => useCase.execute(input)).rejects.toThrow(
@@ -80,13 +80,13 @@ describe('GetClientUseCase Unit Tests', () => {
 
       const input = new GetClientInput({
         id: client.client_id.id,
-        stores_id: 'different-store',
+        store_id: 'different-store',
       });
 
       await expect(() => useCase.execute(input)).rejects.toThrow(
         new EntityValidationError([
           {
-            stores_id: ['Client does not belong to this store'],
+            store_id: ['Client does not belong to this store'],
           },
         ])
       );

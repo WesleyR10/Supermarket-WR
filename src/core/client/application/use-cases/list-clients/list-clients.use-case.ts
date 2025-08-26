@@ -23,7 +23,7 @@ export class ListClientsUseCase
       sort: input.sort,
       sort_dir: input.sort_dir,
       filter: input.filter ? {
-        stores_id: input.filter.stores_id,
+        store_id: input.filter.store_id,
         filter: input.filter.filter,
         customer_type: input.filter.customer_type,
         loyalty_level: input.filter.loyalty_level,

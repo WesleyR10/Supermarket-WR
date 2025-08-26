@@ -36,7 +36,7 @@ client/
 
 ### Propriedades Principais
 
-- **Identificação**: `client_id`, `user_id`, `stores_id`
+- **Identificação**: `client_id`, `user_id`, `store_id`
 - **Fidelidade**: `loyalty_points`, `loyalty_level`, `loyalty_card_number`
 - **Perfil**: `customer_type`, `avg_monthly_spending`, `total_purchases`
 - **Crédito**: `credit_limit`
@@ -60,6 +60,7 @@ client/
 **Propósito**: Segmentação automática de clientes baseada em comportamento de compra.
 
 **Características**:
+
 - Análise RFM (Recency, Frequency, Monetary)
 - 11 tipos de segmentos diferentes
 - Predição de risco de churn
@@ -67,6 +68,7 @@ client/
 - Análise de padrões comportamentais
 
 **Segmentos Disponíveis**:
+
 - `CHAMPIONS`: Melhores clientes (alta recência, frequência e valor)
 - `LOYAL_CUSTOMERS`: Clientes fiéis
 - `POTENTIAL_LOYALISTS`: Potenciais clientes fiéis
@@ -80,6 +82,7 @@ client/
 - `LOST`: Clientes perdidos
 
 **Fatores de Cálculo**:
+
 - Recência da última compra
 - Frequência de compras
 - Valor monetário total
@@ -87,6 +90,7 @@ client/
 - Padrões sazonais
 
 **Parâmetros Configuráveis**:
+
 - Thresholds para recência, frequência e valor monetário
 - Pesos para cálculo de LTV
 - Limites para detecção de churn
@@ -97,18 +101,21 @@ client/
 **Propósito**: Cálculo de scores de fidelidade e determinação de níveis de lealdade.
 
 **Características**:
+
 - Algoritmo multi-fatorial para cálculo de fidelidade
 - Classificação automática em níveis de lealdade
 - Pesos configuráveis para diferentes fatores
 - Suporte a diferentes tipos de cliente
 
 **Fatores de Cálculo**:
+
 - **Recência** (40%): Quão recente foi a última compra
 - **Frequência** (30%): Frequência de compras
 - **Valor Monetário** (20%): Valor total gasto
 - **Tempo como Cliente** (10%): Tenure do cliente
 
 **Thresholds de Score**:
+
 - Bronze: 0-25
 - Silver: 26-50
 - Gold: 51-75
@@ -116,6 +123,7 @@ client/
 - Diamond: 91-100
 
 **Parâmetros Configuráveis**:
+
 - Pesos dos fatores de cálculo
 - Thresholds para cada nível de fidelidade
 - Fatores de ajuste por tipo de cliente
@@ -125,12 +133,14 @@ client/
 **Propósito**: Validação de crédito e determinação de limites baseados em risco.
 
 **Características**:
+
 - Análise de risco multi-dimensional
 - Limites de crédito por tipo de cliente
 - Validação de elegibilidade
 - Classificação de risco em 5 níveis
 
 **Fatores de Score**:
+
 - **Histórico de Pagamento** (35%): Pontualidade nos pagamentos
 - **Utilização de Crédito** (30%): Percentual do limite utilizado
 - **Histórico de Crédito** (15%): Tempo de relacionamento
@@ -138,6 +148,7 @@ client/
 - **Novas Consultas** (10%): Consultas recentes ao CPF
 
 **Níveis de Risco**:
+
 - `VERY_LOW`: Score 81-100
 - `LOW`: Score 61-80
 - `MEDIUM`: Score 41-60
@@ -145,6 +156,7 @@ client/
 - `VERY_HIGH`: Score 0-20
 
 **Limites por Tipo de Cliente**:
+
 - Individual: R$ 500 - R$ 5.000
 - Business: R$ 1.000 - R$ 20.000
 - VIP: R$ 2.000 - R$ 50.000
@@ -154,6 +166,7 @@ client/
 ### ClientValidator
 
 **Validações Implementadas**:
+
 - Email válido e único por loja
 - CPF/CNPJ válido conforme tipo de cliente
 - Telefone no formato brasileiro
@@ -185,6 +198,7 @@ __tests__/
 ### Cenários de Teste Cobertos
 
 **ClientSegmentationDomainService**:
+
 - Segmentação de diferentes tipos de cliente
 - Cálculo de scores para segmentos específicos
 - Predição de risco de churn
@@ -193,12 +207,14 @@ __tests__/
 - Parâmetros customizados
 
 **LoyaltyCalculationDomainService**:
+
 - Cálculo de scores para diferentes perfis
 - Determinação de níveis de fidelidade
 - Validação de pesos dos fatores
 - Casos extremos de valores
 
 **CreditValidationDomainService**:
+
 - Validação para diferentes tipos de cliente
 - Cálculo de scores de crédito
 - Determinação de limites
@@ -212,6 +228,7 @@ __tests__/
 **Propósito**: Facilitar a criação de objetos Client para testes com dados realistas.
 
 **Métodos Principais**:
+
 - `withChampionClient()`: Cliente campeão
 - `withVipClient()`: Cliente VIP
 - `withNewClient()`: Cliente novo
@@ -224,6 +241,7 @@ __tests__/
 - `withLowCreditScoreClient()`: Cliente com baixo score de crédito
 
 **Características**:
+
 - Dados realistas usando biblioteca Chance.js
 - Métodos fluentes para configuração
 - Suporte a criação em lote
@@ -248,16 +266,19 @@ __tests__/
 ## Integração com Outros Domínios
 
 ### Sales (Vendas)
+
 - Atualização automática de métricas de compra
 - Cálculo de RFM baseado no histórico de vendas
 - Integração com sistema de pontos de fidelidade
 
 ### E-commerce
+
 - Sincronização de preferências de entrega
 - Histórico de navegação para segmentação
 - Carrinho abandonado para análise de churn
 
 ### Fiscal
+
 - Validação de documentos fiscais
 - Integração com sistemas de crédito externos
 - Compliance com LGPD

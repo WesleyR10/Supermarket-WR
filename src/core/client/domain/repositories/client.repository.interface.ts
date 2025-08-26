@@ -4,7 +4,7 @@ import { SearchParams, SearchParamsConstructorProps } from '../../../shared/doma
 import { SearchResult } from '../../../shared/domain/repository/search-result';
 
 export type ClientFilter = {
-  stores_id?: string;
+  store_id?: string;
   filter?: string;
   customer_type?: CustomerType;
   loyalty_level?: LoyaltyLevel;
@@ -13,9 +13,9 @@ export type ClientFilter = {
 
 export class ClientSearchParams extends SearchParams<ClientFilter> {
   static create(props: SearchParamsConstructorProps<ClientFilter>): ClientSearchParams {
-    // stores_id é obrigatório para isolamento multi-tenant
-    if (!props.filter?.stores_id) {
-      throw new Error('stores_id is required for client search to ensure multi-tenant isolation');
+    // store_id é obrigatório para isolamento multi-tenant
+    if (!props.filter?.store_id) {
+      throw new Error('store_id is required for client search to ensure multi-tenant isolation');
     }
     return new ClientSearchParams(props);
   }
@@ -30,12 +30,12 @@ export class ClientSearchParams extends SearchParams<ClientFilter> {
         ? null
         : value;
 
-    if (!_value || !_value.stores_id) {
-      throw new Error('stores_id is required for client filter to ensure multi-tenant isolation');
+    if (!_value || !_value.store_id) {
+      throw new Error('store_id is required for client filter to ensure multi-tenant isolation');
     }
 
     const filter = {
-      stores_id: `${_value.stores_id}`,
+      store_id: `${_value.store_id}`,
       ...(_value && _value.filter && { filter: `${_value.filter}` }),
       ...(_value && _value.customer_type && { customer_type: _value.customer_type }),
       ...(_value && _value.loyalty_level && { loyalty_level: _value.loyalty_level }),

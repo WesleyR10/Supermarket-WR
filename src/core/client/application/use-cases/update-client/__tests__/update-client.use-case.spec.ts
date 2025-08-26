@@ -33,7 +33,7 @@ describe('UpdateClientUseCase Unit Tests', () => {
 
       const input = new UpdateClientInput({
         id: client.client_id.id,
-        stores_id: 'store-123',
+        store_id: 'store-123',
         customer_type: CustomerType.VIP,
         credit_limit: 2000,
         preferred_contact_method: ContactMethod.WHATSAPP,
@@ -52,7 +52,7 @@ describe('UpdateClientUseCase Unit Tests', () => {
       expect(output).toStrictEqual({
         id: client.client_id.id,
         user_id: 'user-123',
-        stores_id: 'store-123',
+        store_id: 'store-123',
         customer_type: CustomerType.VIP,
         loyalty_points: expect.any(Number),
         loyalty_level: expect.any(String),
@@ -80,7 +80,7 @@ describe('UpdateClientUseCase Unit Tests', () => {
       const fakeId = '550e8400-e29b-41d4-a716-446655440000';
       const input = new UpdateClientInput({
         id: fakeId,
-        stores_id: 'store-123',
+        store_id: 'store-123',
         customer_type: CustomerType.REGULAR,
       });
 
@@ -99,14 +99,14 @@ describe('UpdateClientUseCase Unit Tests', () => {
 
       const input = new UpdateClientInput({
         id: client.client_id.id,
-        stores_id: 'different-store',
+        store_id: 'different-store',
         customer_type: CustomerType.REGULAR,
       });
 
       await expect(() => useCase.execute(input)).rejects.toThrow(
         new EntityValidationError([
           {
-            stores_id: ['Client does not belong to this store'],
+            store_id: ['Client does not belong to this store'],
           },
         ])
       );
@@ -127,7 +127,7 @@ describe('UpdateClientUseCase Unit Tests', () => {
 
       const input = new UpdateClientInput({
         id: client.client_id.id,
-        stores_id: 'store-123',
+        store_id: 'store-123',
         notes: 'Apenas nota atualizada'
       });
 
@@ -149,7 +149,7 @@ describe('UpdateClientUseCase Unit Tests', () => {
 
       const input = new UpdateClientInput({
         id: client.client_id.id,
-        stores_id: 'store-123',
+        store_id: 'store-123',
         is_active: false
       });
 

@@ -7,7 +7,7 @@ export class ClientFakeBuilder<TBuild = any> {
   // auto generated in entity
   private _client_id: PropOrFactory<ClientId> | undefined = undefined;
   private _user_id: PropOrFactory<string> = (_index) => this.chance.guid();
-  private _stores_id: PropOrFactory<string> = (_index) => this.chance.guid();
+  private _store_id: PropOrFactory<string> = (_index) => this.chance.guid();
   
   // Programa de fidelidade
   private _loyalty_points: PropOrFactory<number> = (_index) => this.chance.integer({ min: 0, max: 10000 });
@@ -74,7 +74,7 @@ export class ClientFakeBuilder<TBuild = any> {
   }
 
   withStoresId(valueOrFactory: PropOrFactory<string>) {
-    this._stores_id = valueOrFactory;
+    this._store_id = valueOrFactory;
     return this;
   }
 
@@ -332,7 +332,7 @@ export class ClientFakeBuilder<TBuild = any> {
             ? undefined
             : this.callFactory(this._client_id, index),
           user_id: this.callFactory(this._user_id, index),
-          stores_id: this.callFactory(this._stores_id, index),
+          store_id: this.callFactory(this._store_id, index),
           loyalty_points: this.callFactory(this._loyalty_points, index),
           loyalty_level: this.callFactory(this._loyalty_level, index),
           loyalty_card_number: this.callFactory(this._loyalty_card_number, index),
@@ -372,8 +372,8 @@ export class ClientFakeBuilder<TBuild = any> {
     return this.getValue('user_id');
   }
 
-  get stores_id() {
-    return this.getValue('stores_id');
+  get store_id() {
+    return this.getValue('store_id');
   }
 
   get loyalty_points() {

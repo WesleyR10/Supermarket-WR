@@ -16,7 +16,7 @@ import { Transform, Type } from 'class-transformer';
 export class ListClientsFilter {
   @IsString()
   @IsNotEmpty()
-  stores_id: string;
+  store_id: string;
 
   @IsOptional()
   @IsString()
@@ -73,7 +73,7 @@ export class ListClientsInput implements SearchInput<ListClientsFilter> {
     if (props.filter) {
       const f = new ListClientsFilter();
       const pf: any = props.filter as any;
-      f.stores_id = pf.stores_id;
+      f.store_id = pf.store_id;
       f.filter = pf.filter;
       f.customer_type = pf.customer_type;
       f.loyalty_level = pf.loyalty_level;

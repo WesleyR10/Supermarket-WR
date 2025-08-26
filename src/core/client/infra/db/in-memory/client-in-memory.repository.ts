@@ -19,7 +19,7 @@ export class ClientInMemoryRepository
 {
   sortableFields: string[] = [
     'user_id',
-    'stores_id',
+    'store_id',
     'loyalty_points',
     'loyalty_level',
     'customer_type',
@@ -44,7 +44,7 @@ export class ClientInMemoryRepository
       return items.filter((item) => {
         const matchesText = (
           item.user_id.toLowerCase().includes(text) ||
-          item.stores_id.toLowerCase().includes(text) ||
+          item.store_id.toLowerCase().includes(text) ||
           (item.loyalty_card_number && item.loyalty_card_number.toLowerCase().includes(text)) ||
           (item.notes && item.notes.toLowerCase().includes(text)) ||
           (item.registration_source && item.registration_source.toLowerCase().includes(text))
@@ -56,8 +56,8 @@ export class ClientInMemoryRepository
     const objFilter = filter as ClientFilter;
 
     return items.filter((item) => {
-      // Multi-tenant: quando informado, filtra por stores_id
-      if (objFilter.stores_id && item.stores_id !== objFilter.stores_id) {
+      // Multi-tenant: quando informado, filtra por store_id
+      if (objFilter.store_id && item.store_id !== objFilter.store_id) {
         return false;
       }
 
@@ -81,7 +81,7 @@ export class ClientInMemoryRepository
         const textFilter = String((objFilter as any).filter).toLowerCase();
         const matchesText = (
           item.user_id.toLowerCase().includes(textFilter) ||
-          item.stores_id.toLowerCase().includes(textFilter) ||
+          item.store_id.toLowerCase().includes(textFilter) ||
           (item.loyalty_card_number &&
             item.loyalty_card_number.toLowerCase().includes(textFilter)) ||
           (item.notes &&
@@ -118,7 +118,7 @@ export class ClientInMemoryRepository
   }
 
   async findByStoreId(storeId: string): Promise<Client[]> {
-    return this.items.filter((client) => client.stores_id === storeId);
+    return this.items.filter((client) => client.store_id === storeId);
   }
 
   async findByUserId(userId: string): Promise<Client[]> {
@@ -127,7 +127,7 @@ export class ClientInMemoryRepository
 
   async findByUserIdAndStoreId(userId: string, storeId: string): Promise<Client | null> {
     const client = this.items.find(
-      (client) => client.user_id === userId && client.stores_id === storeId
+      (client) => client.user_id === userId && client.store_id === storeId
     );
     return client || null;
   }

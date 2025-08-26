@@ -3,7 +3,7 @@ import { Client } from '../../../domain/client.aggregate';
 export type ClientOutput = {
   id: string;
   user_id: string;
-  stores_id: string;
+  store_id: string;
   loyalty_points: number;
   loyalty_level: string;
   loyalty_card_number: string | null;

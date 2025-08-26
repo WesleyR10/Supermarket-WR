@@ -24,14 +24,14 @@ describe('ListClientsUseCase Unit Tests', () => {
       await Promise.all(clients.map(client => repository.insert(client)));
 
       const input = new ListClientsInput({
-        filter: { stores_id: 'store-123' },
+        filter: { store_id: 'store-123' },
       });
 
       const output = await useCase.execute(input);
 
       expect(output.items).toHaveLength(2);
-      expect(output.items[0].stores_id).toBe('store-123');
-      expect(output.items[1].stores_id).toBe('store-123');
+      expect(output.items[0].store_id).toBe('store-123');
+      expect(output.items[1].store_id).toBe('store-123');
       expect(output.total).toBe(2);
     });
 
@@ -45,7 +45,7 @@ describe('ListClientsUseCase Unit Tests', () => {
       await Promise.all(clients.map(client => repository.insert(client)));
 
       const input = new ListClientsInput({
-        filter: { stores_id: 'store-123', customer_type: CustomerType.VIP },
+        filter: { store_id: 'store-123', customer_type: CustomerType.VIP },
       });
 
       const output = await useCase.execute(input);
@@ -64,7 +64,7 @@ describe('ListClientsUseCase Unit Tests', () => {
       await Promise.all(clients.map(client => repository.insert(client)));
 
       const input = new ListClientsInput({
-        filter: { stores_id: 'store-123', loyalty_level: LoyaltyLevel.GOLD },
+        filter: { store_id: 'store-123', loyalty_level: LoyaltyLevel.GOLD },
       });
 
       const output = await useCase.execute(input);
@@ -83,7 +83,7 @@ describe('ListClientsUseCase Unit Tests', () => {
       await Promise.all(clients.map(client => repository.insert(client)));
 
       const input = new ListClientsInput({
-        filter: { stores_id: 'store-123', is_active: true },
+        filter: { store_id: 'store-123', is_active: true },
       });
 
       const output = await useCase.execute(input);
@@ -100,7 +100,7 @@ describe('ListClientsUseCase Unit Tests', () => {
       await Promise.all(clients.map(client => repository.insert(client)));
 
       const input = new ListClientsInput({
-        filter: { stores_id: 'store-123' },
+        filter: { store_id: 'store-123' },
         page: 2,
         per_page: 5,
       });
@@ -124,7 +124,7 @@ describe('ListClientsUseCase Unit Tests', () => {
       await Promise.all(clients.map(client => repository.insert(client)));
 
       const input = new ListClientsInput({
-        filter: { stores_id: 'store-123', filter: 'john' },
+        filter: { store_id: 'store-123', filter: 'john' },
       });
 
       const output = await useCase.execute(input);
@@ -135,7 +135,7 @@ describe('ListClientsUseCase Unit Tests', () => {
 
     it('should return empty list when no clients found', async () => {
       const input = new ListClientsInput({
-        filter: { stores_id: 'empty-store' },
+        filter: { store_id: 'empty-store' },
       });
 
       const output = await useCase.execute(input);

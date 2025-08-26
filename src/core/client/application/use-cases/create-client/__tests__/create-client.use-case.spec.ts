@@ -18,7 +18,7 @@ describe('CreateClientUseCase Unit Tests', () => {
       const spyInsert = jest.spyOn(repository, 'insert');
       const input = new CreateClientInput({
         user_id: 'user-123',
-        stores_id: 'store-123',
+        store_id: 'store-123',
         customer_type: CustomerType.REGULAR,
         credit_limit: 1000,
         preferred_contact_method: ContactMethod.EMAIL,
@@ -36,7 +36,7 @@ describe('CreateClientUseCase Unit Tests', () => {
       expect(output).toStrictEqual({
         id: repository.items[0].client_id.id,
         user_id: 'user-123',
-        stores_id: 'store-123',
+        store_id: 'store-123',
         customer_type: CustomerType.REGULAR,
         loyalty_points: 0,
         loyalty_level: expect.any(String),
@@ -71,7 +71,7 @@ describe('CreateClientUseCase Unit Tests', () => {
 
       const input = new CreateClientInput({
         user_id: 'user-123',
-        stores_id: 'store-123',
+        store_id: 'store-123',
         customer_type: CustomerType.REGULAR,
       });
 
@@ -87,7 +87,7 @@ describe('CreateClientUseCase Unit Tests', () => {
     it('should throw error when client is invalid', async () => {
       const input = new CreateClientInput({
         user_id: '',
-        stores_id: 'store-123',
+        store_id: 'store-123',
         customer_type: CustomerType.REGULAR,
       });
 
@@ -99,14 +99,14 @@ describe('CreateClientUseCase Unit Tests', () => {
     it('should create client with minimal required fields', async () => {
       const input = new CreateClientInput({
         user_id: 'user-456',
-        stores_id: 'store-456',
+        store_id: 'store-456',
         customer_type: CustomerType.REGULAR,
       });
 
       const output = await useCase.execute(input);
 
       expect(output.user_id).toBe('user-456');
-      expect(output.stores_id).toBe('store-456');
+      expect(output.store_id).toBe('store-456');
       expect(output.customer_type).toBe(CustomerType.REGULAR);
       expect(output.loyalty_points).toBe(0);
       expect(output.total_purchases).toBe(0);
@@ -116,7 +116,7 @@ describe('CreateClientUseCase Unit Tests', () => {
     it('should create VIP client with higher credit limit', async () => {
       const input = new CreateClientInput({
         user_id: 'user-vip',
-        stores_id: 'store-123',
+        store_id: 'store-123',
         customer_type: CustomerType.VIP,
         credit_limit: 5000,
       });

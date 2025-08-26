@@ -5,7 +5,7 @@ describe('ClientOutputMapper Unit Tests', () => {
   it('should convert a client in output', () => {
     const entity = Client.create({
       user_id: 'user-123',
-      stores_id: 'store-456',
+      store_id: 'store-456',
       customer_type: CustomerType.INDIVIDUAL,
       credit_limit: 1000,
       preferred_contact_method: ContactMethod.EMAIL,
@@ -25,7 +25,7 @@ describe('ClientOutputMapper Unit Tests', () => {
     expect(output).toStrictEqual({
       id: entity.client_id.id,
       user_id: 'user-123',
-      stores_id: 'store-456',
+      store_id: 'store-456',
       loyalty_points: 0,
       loyalty_level: LoyaltyLevel.BRONZE,
       loyalty_card_number: null,
@@ -52,7 +52,7 @@ describe('ClientOutputMapper Unit Tests', () => {
   it('should convert a vip client in output', () => {
     const entity = Client.create({
       user_id: 'user-vip-123',
-      stores_id: 'store-456',
+      store_id: 'store-456',
       customer_type: CustomerType.VIP,
       credit_limit: 5000,
       preferred_contact_method: ContactMethod.WHATSAPP,
@@ -78,7 +78,7 @@ describe('ClientOutputMapper Unit Tests', () => {
     expect(output).toStrictEqual({
       id: entity.client_id.id,
       user_id: 'user-vip-123',
-      stores_id: 'store-456',
+      store_id: 'store-456',
       loyalty_points: 12000,
       loyalty_level: LoyaltyLevel.DIAMOND,
       loyalty_card_number: 'VIP2024001',
@@ -105,7 +105,7 @@ describe('ClientOutputMapper Unit Tests', () => {
   it('should convert a business client in output', () => {
     const entity = Client.create({
       user_id: 'user-business-123',
-      stores_id: 'store-456',
+      store_id: 'store-456',
       customer_type: CustomerType.BUSINESS,
       credit_limit: 10000,
       preferred_contact_method: ContactMethod.EMAIL,
@@ -131,7 +131,7 @@ describe('ClientOutputMapper Unit Tests', () => {
     expect(output).toStrictEqual({
       id: entity.client_id.id,
       user_id: 'user-business-123',
-      stores_id: 'store-456',
+      store_id: 'store-456',
       loyalty_points: 3500,
       loyalty_level: LoyaltyLevel.GOLD,
       loyalty_card_number: 'CORP2024001',
@@ -158,7 +158,7 @@ describe('ClientOutputMapper Unit Tests', () => {
   it('should convert a wholesale client in output', () => {
     const entity = Client.create({
       user_id: 'user-wholesale-123',
-      stores_id: 'store-456',
+      store_id: 'store-456',
       customer_type: CustomerType.WHOLESALE,
       credit_limit: 15000,
       preferred_contact_method: ContactMethod.PHONE,
@@ -184,7 +184,7 @@ describe('ClientOutputMapper Unit Tests', () => {
     expect(output).toStrictEqual({
       id: entity.client_id.id,
       user_id: 'user-wholesale-123',
-      stores_id: 'store-456',
+      store_id: 'store-456',
       loyalty_points: 7500,
       loyalty_level: LoyaltyLevel.PLATINUM,
       loyalty_card_number: 'WHOL2024001',
@@ -211,7 +211,7 @@ describe('ClientOutputMapper Unit Tests', () => {
   it('should convert a new client with minimal data in output', () => {
     const entity = Client.create({
       user_id: 'user-new-123',
-      stores_id: 'store-456',
+      store_id: 'store-456',
     });
     
     const spyToJSON = jest.spyOn(entity, 'toJSON');
@@ -221,7 +221,7 @@ describe('ClientOutputMapper Unit Tests', () => {
     expect(output).toStrictEqual({
       id: entity.client_id.id,
       user_id: 'user-new-123',
-      stores_id: 'store-456',
+      store_id: 'store-456',
       loyalty_points: 0,
       loyalty_level: LoyaltyLevel.BRONZE,
       loyalty_card_number: null,

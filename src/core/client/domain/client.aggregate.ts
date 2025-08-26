@@ -52,7 +52,7 @@ export enum DeliveryPreference {
 export type ClientConstructorProps = {
   client_id?: ClientId;
   user_id: string; // FK para User global
-  stores_id: string; // FK para Store específica
+  store_id: string; // FK para Store específica
   
   // Programa de fidelidade
   loyalty_points?: number;
@@ -89,7 +89,7 @@ export type ClientConstructorProps = {
 
 export type ClientCreateCommand = {
   user_id: string;
-  stores_id: string;
+  store_id: string;
   customer_type?: CustomerType;
   credit_limit?: number | null;
   preferred_contact_method?: ContactMethod;
@@ -105,7 +105,7 @@ export type ClientCreateCommand = {
 export class Client extends AggregateRoot {
   client_id: ClientId;
   user_id: string;
-  stores_id: string;
+  store_id: string;
   
   // Programa de fidelidade
   loyalty_points: number;
@@ -143,7 +143,7 @@ export class Client extends AggregateRoot {
     super();
     this.client_id = props.client_id ?? new ClientId();
     this.user_id = props.user_id;
-    this.stores_id = props.stores_id;
+    this.store_id = props.store_id;
     
     // Programa de fidelidade
     this.loyalty_points = props.loyalty_points ?? 0;
@@ -442,7 +442,7 @@ export class Client extends AggregateRoot {
     return {
       client_id: this.client_id.id,
       user_id: this.user_id,
-      stores_id: this.stores_id,
+      store_id: this.store_id,
       loyalty_points: this.loyalty_points,
       loyalty_level: this.loyalty_level,
       loyalty_card_number: this.loyalty_card_number,

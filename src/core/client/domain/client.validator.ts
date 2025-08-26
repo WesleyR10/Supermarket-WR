@@ -8,9 +8,9 @@ export class ClientRules {
   @IsNotEmpty({ groups: ['user_id'] })
   user_id: string;
 
-  @IsString({ groups: ['stores_id'] })
-  @IsNotEmpty({ groups: ['stores_id'] })
-  stores_id: string;
+  @IsString({ groups: ['store_id'] })
+  @IsNotEmpty({ groups: ['store_id'] })
+  store_id: string;
 
   @Min(0, { groups: ['loyalty_points'] })
   @Max(1000000, { groups: ['loyalty_points'] })
@@ -76,7 +76,7 @@ export class ClientValidator extends ClassValidatorFields {
   validate(notification: Notification, data: any, fields?: string[]): boolean {
     const newFields = fields?.length ? fields : [
       'user_id',
-      'stores_id',
+      'store_id',
       'loyalty_points',
       'loyalty_card_number',
       'total_purchases',

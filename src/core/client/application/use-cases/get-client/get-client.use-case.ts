@@ -20,10 +20,10 @@ export class GetClientUseCase
     }
 
     // Validação de multi-tenancy
-    if (client.stores_id !== input.stores_id) {
+    if (client.store_id !== input.store_id) {
       throw new EntityValidationError([
         {
-          stores_id: ['Client does not belong to this store'],
+          store_id: ['Client does not belong to this store'],
         },
       ]);
     }

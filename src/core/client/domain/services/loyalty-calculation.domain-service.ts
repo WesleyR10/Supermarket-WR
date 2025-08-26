@@ -156,7 +156,7 @@ export class LoyaltyCalculationDomainService implements ILoyaltyCalculationDomai
   const simulatedData = {
     client_id: new ClientId(client.client_id.id),
     user_id: client.user_id,
-    stores_id: client.stores_id,
+    store_id: client.store_id,
     loyalty_points: client.loyalty_points,
     loyalty_level: client.loyalty_level,
     loyalty_card_number: client.loyalty_card_number,

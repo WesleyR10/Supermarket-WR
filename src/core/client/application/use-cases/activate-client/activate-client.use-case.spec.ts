@@ -26,7 +26,7 @@ describe('ActivateClientUseCase Unit Tests', () => {
 
     const input = new ActivateClientInput({
       id: client.client_id.id,
-      stores_id: 'store-123',
+      store_id: 'store-123',
     });
 
     await useCase.execute(input);
@@ -39,7 +39,7 @@ describe('ActivateClientUseCase Unit Tests', () => {
   it('should throw error when client not found', async () => {
     const input = new ActivateClientInput({
       id: '550e8400-e29b-41d4-a716-446655440000',
-      stores_id: 'store-123',
+      store_id: 'store-123',
     });
 
     await expect(() => useCase.execute(input)).rejects.toThrow(
@@ -59,13 +59,13 @@ describe('ActivateClientUseCase Unit Tests', () => {
 
     const input = new ActivateClientInput({
       id: client.client_id.id,
-      stores_id: 'store-456', // Different store
+      store_id: 'store-456', // Different store
     });
 
     await expect(() => useCase.execute(input)).rejects.toThrow(
       new EntityValidationError([
         {
-          stores_id: ['Client does not belong to this store'],
+          store_id: ['Client does not belong to this store'],
         },
       ])
     );
@@ -83,7 +83,7 @@ describe('ActivateClientUseCase Unit Tests', () => {
 
     const input = new ActivateClientInput({
       id: client.client_id.id,
-      stores_id: 'store-123',
+      store_id: 'store-123',
     });
 
     await expect(useCase.execute(input)).resolves.not.toThrow();
