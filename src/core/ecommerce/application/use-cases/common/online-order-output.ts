@@ -2,6 +2,7 @@ import { OnlineOrder, OrderStatus } from '../../../domain/online-order.aggregate
 
 export type OnlineOrderOutput = {
   order_id: string;
+  store_id: string;
   client_id: string;
   items: Array<{
     product_id: string;
@@ -29,17 +30,18 @@ export type OnlineOrderOutput = {
     type: string;
     details?: Record<string, any>;
   };
-  notes?: string;
-  estimated_delivery?: string;
-  actual_delivery?: string;
-  created_at: string;
-  updated_at: string;
+  notes?: string | null;
+  estimated_delivery?: Date | null;
+  actual_delivery?: Date | null;
+  created_at: Date;
+  updated_at: Date;
 };
 
 export class OnlineOrderOutputMapper {
   static toOutput(entity: OnlineOrder): OnlineOrderOutput {
     return {
       order_id: entity.order_id.id,
+      store_id: entity.store_id,
       client_id: entity.client_id.id,
       items: entity.items.map(item => ({
         product_id: item.product_id.id,
@@ -67,11 +69,11 @@ export class OnlineOrderOutputMapper {
         type: entity.payment_method.type,
         details: entity.payment_method.details
       } : undefined,
-      notes: entity.notes ?? undefined,
-      estimated_delivery: entity.estimated_delivery?.toISOString(),
-      actual_delivery: entity.actual_delivery?.toISOString(),
-      created_at: entity.created_at.toISOString(),
-      updated_at: entity.updated_at.toISOString()
+      notes: entity.notes,
+      estimated_delivery: entity.estimated_delivery,
+      actual_delivery: entity.actual_delivery,
+      created_at: entity.created_at,
+      updated_at: entity.updated_at
     };
   }
 }

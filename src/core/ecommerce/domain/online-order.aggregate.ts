@@ -2,13 +2,18 @@ import { AggregateRoot } from '../../shared/domain/aggregate-root';
 import { ValueObject } from '../../shared/domain/value-object';
 import { Uuid } from '../../shared/domain/value-objects/uuid.vo';
 import { Money } from '../../shared/domain/value-objects/money.vo';
-import { Quantity } from '../../shared/domain/value-objects/quantity.vo';
-import { Price } from '../../shared/domain/value-objects/price.vo';
-import { PaymentMethod } from '../../shared/domain/value-objects/payment-method.vo';
-// import { OnlineOrderValidatorFactory } from './online-order.validator';
+import { Quantity, InvalidQuantityError } from '../../shared/domain/value-objects/quantity.vo';
+import { Price, InvalidPriceError } from '../../shared/domain/value-objects/price.vo';
+import { PaymentMethod, PaymentMethodType } from '../../shared/domain/value-objects/payment-method.vo';
+import { InvalidArgumentError } from '../../shared/domain/errors/invalid-argument.error';
 import { OrderItemFakeBuilder } from './fake-builders/order-item-fake.builder';
 import { DeliveryAddressFakeBuilder } from './fake-builders/delivery-address-fake.builder';
 import { OnlineOrderFakeBuilder } from './fake-builders/online-order-fake.builder';
+import { OnlineOrderCreatedEvent } from './events/online-order-created.event';
+import { OnlineOrderUpdatedEvent } from './events/online-order-updated.event';
+import { OnlineOrderConfirmedEvent } from './events/online-order-confirmed.event';
+import { OnlineOrderCancelledEvent } from './events/online-order-cancelled.event';
+import { OnlineOrderDeliveredEvent } from './events/online-order-delivered.event';
 
 export class OnlineOrderId extends Uuid {}
 
@@ -154,6 +159,7 @@ export class DeliveryAddress {
 export type OnlineOrderConstructorProps = {
   order_id?: OnlineOrderId;
   client_id: Uuid;
+  store_id: string;
   items: OrderItem[];
   status?: OrderStatus;
   delivery_address: DeliveryAddress;
@@ -170,6 +176,7 @@ export type OnlineOrderConstructorProps = {
 
 export type OnlineOrderCreateCommand = {
   client_id: string;
+  store_id: string;
   items: Array<{
     product_id: string;
     product_name: string;
@@ -189,6 +196,7 @@ export type OnlineOrderCreateCommand = {
 export class OnlineOrder extends AggregateRoot {
   order_id: OnlineOrderId;
   client_id: Uuid;
+  store_id: string;
   items: OrderItem[];
   status: OrderStatus;
   delivery_address: DeliveryAddress;
@@ -206,6 +214,7 @@ export class OnlineOrder extends AggregateRoot {
     super();
     this.order_id = props.order_id ?? new OnlineOrderId();
     this.client_id = props.client_id;
+    this.store_id = props.store_id;
     this.items = props.items;
     this.status = props.status ?? OrderStatus.PENDING;
     this.delivery_address = props.delivery_address;
@@ -219,31 +228,97 @@ export class OnlineOrder extends AggregateRoot {
 
     // Calcular subtotal e total se não fornecidos
     this.subtotal = props.subtotal ?? this.calculateSubtotal();
-    this.total = props.total ?? this.calculateTotal();
+    this.total = props.total ?? new Money(this.subtotal.value + this.delivery_fee.value);
   }
 
   static create(props: OnlineOrderCreateCommand): OnlineOrder {
-    const orderItems = props.items.map(item => OrderItem.create({
-      product_id: new Uuid(item.product_id),
-      product_name: item.product_name,
-      quantity: new Quantity(item.quantity),
-      unit_price: new Price(item.unit_price)
-    }));
+    // Validar store_id
+    if (!props.store_id || props.store_id.trim() === '') {
+      throw new Error('store_id should not be empty');
+    }
+
+    // Validar client_id
+    if (!props.client_id || props.client_id.trim() === '') {
+      throw new Error('client_id should not be empty');
+    }
+
+    // Validar itens
+    if (!props.items || props.items.length === 0) {
+      throw new InvalidArgumentError('items should not be empty');
+    }
+
+    const orderItems = props.items.map((item, index) => {
+      if (!item.product_id || String(item.product_id).trim() === '') {
+        throw new Error('product_id should not be empty');
+      }
+      if (!item.product_name || String(item.product_name).trim() === '') {
+        throw new Error('product_name should not be empty');
+      }
+      if (!item.quantity || item.quantity <= 0) {
+        throw new InvalidQuantityError('quantity must be greater than 0');
+      }
+      if (!item.unit_price || item.unit_price <= 0) {
+         throw new InvalidPriceError('unit_price must be greater than 0');
+       }
+
+      return OrderItem.create({
+        product_id: new Uuid(item.product_id),
+        product_name: item.product_name,
+        quantity: new Quantity(item.quantity),
+        unit_price: new Price(item.unit_price)
+      });
+    });
+
+    // Validar endereço
+    if (!props.delivery_address || !props.delivery_address.street || !props.delivery_address.number || 
+        !props.delivery_address.neighborhood || !props.delivery_address.city || 
+        !props.delivery_address.state || !props.delivery_address.zip_code) {
+      throw new Error('street should not be empty');
+    }
+    const deliveryAddress = DeliveryAddress.create(props.delivery_address);
+    
+    // Validar método de pagamento
+    let paymentMethod: PaymentMethod | null = null;
+    if (props.payment_method) {
+      const paymentType = props.payment_method.type.toUpperCase() as any;
+      if (!Object.values(PaymentMethodType).includes(paymentType)) {
+        throw new Error('Invalid payment method type');
+      }
+      paymentMethod = new PaymentMethod(paymentType, props.payment_method.details);
+    }
+
+    if (props.delivery_fee < 0) {
+      throw new InvalidArgumentError('delivery_fee must be greater than or equal to 0');
+    }
 
     const order = new OnlineOrder({
       client_id: new Uuid(props.client_id),
+      store_id: props.store_id,
       items: orderItems,
-      delivery_address: DeliveryAddress.create(props.delivery_address),
+      delivery_address: deliveryAddress,
       delivery_fee: new Money(props.delivery_fee),
-      payment_method: props.payment_method ? new PaymentMethod(
-        props.payment_method.type as any,
-        props.payment_method.details
-      ) : null,
+      payment_method: paymentMethod,
       notes: props.notes ?? null,
       estimated_delivery: props.estimated_delivery ?? null
     });
 
-    order.validate();
+    order.applyEvent(new OnlineOrderCreatedEvent({
+      aggregate_id: order.order_id,
+      order_id: order.order_id,
+      client_id: order.client_id,
+      store_id: order.store_id,
+      items: order.items,
+      status: order.status,
+      delivery_address: order.delivery_address,
+      subtotal: order.subtotal,
+      delivery_fee: order.delivery_fee,
+      total: order.total,
+      payment_method: order.payment_method,
+      notes: order.notes,
+      estimated_delivery: order.estimated_delivery,
+      created_at: order.created_at
+    }));
+
     return order;
   }
 
@@ -320,23 +395,28 @@ export class OnlineOrder extends AggregateRoot {
 
   confirm(): void {
     if (this.status !== OrderStatus.PENDING) {
-      this.notification.addError('Only pending orders can be confirmed', 'status');
-      return;
+      throw new Error('Invalid status transition from PENDING to CONFIRMED');
     }
 
     if (!this.payment_method) {
-      this.notification.addError('Payment method is required to confirm order', 'payment_method');
-      return;
+      throw new Error('Payment method is required to confirm order');
     }
 
     this.status = OrderStatus.CONFIRMED;
     this.updated_at = new Date();
+    
+    this.applyEvent(new OnlineOrderConfirmedEvent({
+      aggregate_id: this.order_id,
+      order_id: this.order_id,
+      client_id: this.client_id,
+      store_id: this.store_id,
+      confirmed_at: new Date()
+    }));
   }
 
   startPreparing(): void {
     if (this.status !== OrderStatus.CONFIRMED) {
-      this.notification.addError('Only confirmed orders can start preparation', 'status');
-      return;
+      throw new Error('Invalid status transition from PENDING to PREPARING');
     }
 
     this.status = OrderStatus.PREPARING;
@@ -345,8 +425,7 @@ export class OnlineOrder extends AggregateRoot {
 
   sendForDelivery(): void {
     if (this.status !== OrderStatus.PREPARING) {
-      this.notification.addError('Only orders in preparation can be sent for delivery', 'status');
-      return;
+      throw new Error('Invalid status transition from PREPARING to OUT_FOR_DELIVERY');
     }
 
     this.status = OrderStatus.OUT_FOR_DELIVERY;
@@ -355,23 +434,38 @@ export class OnlineOrder extends AggregateRoot {
 
   markAsDelivered(): void {
     if (this.status !== OrderStatus.OUT_FOR_DELIVERY) {
-      this.notification.addError('Only orders out for delivery can be marked as delivered', 'status');
-      return;
+      throw new Error('Invalid status transition from OUT_FOR_DELIVERY to DELIVERED');
     }
 
     this.status = OrderStatus.DELIVERED;
     this.actual_delivery = new Date();
     this.updated_at = new Date();
+    
+    this.applyEvent(new OnlineOrderDeliveredEvent({
+      aggregate_id: this.order_id,
+      order_id: this.order_id,
+      client_id: this.client_id,
+      store_id: this.store_id,
+      delivered_at: this.actual_delivery!
+    }));
   }
 
-  cancel(): void {
+  cancel(reason?: string): void {
     if (![OrderStatus.PENDING, OrderStatus.CONFIRMED].includes(this.status)) {
-      this.notification.addError('Only pending or confirmed orders can be cancelled', 'status');
-      return;
+      throw new Error('Only pending or confirmed orders can be cancelled');
     }
 
     this.status = OrderStatus.CANCELLED;
     this.updated_at = new Date();
+    
+    this.applyEvent(new OnlineOrderCancelledEvent({
+      aggregate_id: this.order_id,
+      order_id: this.order_id,
+      client_id: this.client_id,
+      store_id: this.store_id,
+      reason: reason || null,
+      cancelled_at: new Date()
+    }));
   }
 
   setPaymentMethod(paymentMethod: PaymentMethod): void {
@@ -390,8 +484,20 @@ export class OnlineOrder extends AggregateRoot {
       return;
     }
 
+    const oldAddress = this.delivery_address;
     this.delivery_address = newAddress;
     this.updated_at = new Date();
+    
+    this.applyEvent(new OnlineOrderUpdatedEvent({
+      aggregate_id: this.order_id,
+      order_id: this.order_id,
+      client_id: this.client_id,
+      store_id: this.store_id,
+      field_changed: 'delivery_address',
+      old_value: oldAddress,
+      new_value: newAddress,
+      updated_at: this.updated_at
+    }));
   }
 
   updateNotes(notes: string | null): void {
@@ -472,27 +578,7 @@ export class OnlineOrder extends AggregateRoot {
     return this.estimated_delivery !== null;
   }
 
-  getDeliveryTimeEstimate(): string {
-    if (this.isExpressDelivery()) {
-      return '30-60 minutes';
-    }
 
-    if (!this.estimated_delivery) {
-      return 'N/A';
-    }
-
-    const now = new Date();
-    const diffMs = this.estimated_delivery.getTime() - now.getTime();
-    const diffMin = Math.max(0, Math.round(diffMs / 60000));
-
-    if (diffMin <= 60) {
-      return `${diffMin} minutes`;
-    }
-
-    const hours = Math.floor(diffMin / 60);
-    const minutes = diffMin % 60;
-    return `${hours}h ${minutes}m`;
-  }
 
   private calculateSubtotal(): Money {
     const total = this.items.reduce((sum, item) => sum + item.subtotal.value, 0);
@@ -515,19 +601,39 @@ export class OnlineOrder extends AggregateRoot {
   toJSON() {
     return {
       order_id: this.order_id.id,
+      store_id: this.store_id,
       client_id: this.client_id.id,
-      items: this.items.map(item => item.toJSON()),
+      items: this.items.map(item => ({
+        product_id: item.product_id.id,
+        product_name: item.product_name,
+        quantity: item.quantity.value,
+        unit_price: item.unit_price.value,
+        subtotal: item.subtotal.value
+      })),
       status: this.status,
-      delivery_address: this.delivery_address.toJSON(),
+      delivery_address: {
+        street: this.delivery_address.street,
+        number: this.delivery_address.number,
+        complement: this.delivery_address.complement,
+        neighborhood: this.delivery_address.neighborhood,
+        city: this.delivery_address.city,
+        state: this.delivery_address.state,
+        zip_code: this.delivery_address.zip_code,
+        latitude: this.delivery_address.latitude,
+        longitude: this.delivery_address.longitude
+      },
       subtotal: this.subtotal.value,
       delivery_fee: this.delivery_fee.value,
       total: this.total.value,
-      payment_method: this.payment_method?.toString() ?? null,
+      payment_method: this.payment_method ? {
+        type: this.payment_method.type,
+        details: this.payment_method.details
+      } : null,
       notes: this.notes,
-      estimated_delivery: this.estimated_delivery?.toISOString() ?? null,
-      actual_delivery: this.actual_delivery?.toISOString() ?? null,
-      created_at: this.created_at.toISOString(),
-      updated_at: this.updated_at.toISOString()
+      estimated_delivery: this.estimated_delivery,
+      actual_delivery: this.actual_delivery,
+      created_at: this.created_at,
+      updated_at: this.updated_at
     };
   }
 }

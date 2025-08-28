@@ -1,53 +1,82 @@
 import { IUseCase } from '../../../../shared/application/use-case.interface';
+import { EntityValidationError } from '../../../../shared/domain/validators/validation.error';
 import { OnlineOrder } from '../../../domain/online-order.aggregate';
 import { OnlineOrderOutput, OnlineOrderOutputMapper } from '../common/online-order-output';
-import { CreateOnlineOrderInput } from './create-online-order.input';
-import { IOnlineOrderRepository } from '../../../domain/online-order.repository';
+import { CreateOnlineOrderInput, ValidateCreateOnlineOrderInput } from './create-online-order.input';
+import { IOnlineOrderRepository } from '../../../domain/repositories/online-order.repository.interface';
+import { IStockValidationService } from '../../../domain/services/stock-validation.service.interface';
+import { Uuid } from '../../../../shared/domain/value-objects/uuid.vo';
+import { Quantity } from '../../../../shared/domain/value-objects/quantity.vo';
 
 export class CreateOnlineOrderUseCase
-  implements IUseCase<CreateOnlineOrderInput, OnlineOrderOutput>
+  implements IUseCase<CreateOnlineOrderInput, CreateOnlineOrderOutput>
 {
   constructor(
-    private readonly onlineOrderRepository: IOnlineOrderRepository
+    private readonly onlineOrderRepo: IOnlineOrderRepository,
+    private readonly stockValidationService?: IStockValidationService
   ) {}
 
-  async execute(input: CreateOnlineOrderInput): Promise<OnlineOrderOutput> {
-    // Mapear itens com tipos primitivos esperados pelo domínio
-    const items = input.items.map(item => ({
-      product_id: item.product_id,
-      product_name: item.product_name,
-      quantity: item.quantity,
-      unit_price: item.unit_price,
+  async execute(input: CreateOnlineOrderInput): Promise<CreateOnlineOrderOutput> {
+    // Validação de estoque antes de criar o pedido
+    if (this.stockValidationService) {
+      await this.validateStock(input);
+    }
+
+    // Criação da entidade (Domain responsibility) - TODAS as validações ficam no aggregate
+    const createCommand = {
+      ...input,
+      estimated_delivery: input.estimated_delivery ? new Date(input.estimated_delivery) : undefined
+    };
+    const entity = OnlineOrder.create(createCommand);
+
+    // Verificação de erros de validação
+    if (entity.notification.hasErrors()) {
+      throw new EntityValidationError(entity.notification.toJSON());
+    }
+
+    // Persistência
+    await this.onlineOrderRepo.insert(entity);
+
+    return OnlineOrderOutputMapper.toOutput(entity);
+  }
+
+  private async validateStock(input: CreateOnlineOrderInput): Promise<void> {
+    if (!this.stockValidationService) {
+      return;
+    }
+
+    // Converte os itens do input para o formato esperado pelo serviço de estoque
+    const stockItems = input.items.map(item => ({
+      product_id: new Uuid(item.product_id),
+      quantity: new Quantity(item.quantity)
     }));
 
-    // Preparar dados do pedido conforme contrato de OnlineOrder.create
-    const order = OnlineOrder.create({
-      client_id: input.client_id,
-      items,
-      delivery_address: {
-        street: input.delivery_address.street,
-        number: input.delivery_address.number,
-        complement: input.delivery_address.complement,
-        neighborhood: input.delivery_address.neighborhood,
-        city: input.delivery_address.city,
-        state: input.delivery_address.state,
-        zip_code: input.delivery_address.zip_code,
-        latitude: input.delivery_address.latitude,
-        longitude: input.delivery_address.longitude,
-      },
-      delivery_fee: input.delivery_fee,
-      payment_method: input.payment_method ? {
-        type: input.payment_method.type,
-        details: input.payment_method.details
-      } : undefined,
-      notes: input.notes,
-      estimated_delivery: input.estimated_delivery
-        ? new Date(input.estimated_delivery)
-        : undefined,
-    });
+    // Valida disponibilidade de estoque
+    const stockValidation = await this.stockValidationService.validateStockAvailability(
+      input.store_id,
+      stockItems
+    );
 
-    await this.onlineOrderRepository.insert(order);
+    // Se há erros de estoque, lança exceção
+    if (!stockValidation.is_valid) {
+      const stockErrors: Record<string, string[]> = {};
+      
+      stockValidation.errors.forEach(error => {
+        const field = `items.${error.product_id.id}`;
+        if (!stockErrors[field]) {
+          stockErrors[field] = [];
+        }
+        stockErrors[field].push(error.message);
+      });
+      
+      throw new EntityValidationError([stockErrors]);
+    }
 
-    return OnlineOrderOutputMapper.toOutput(order);
+    // Log de avisos de estoque (baixo estoque, próximo ao vencimento, etc.)
+    if (stockValidation.warnings.length > 0) {
+      console.warn('[CreateOnlineOrder] Avisos de estoque:', stockValidation.warnings.map(w => w.message));
+    }
   }
 }
+
+export type CreateOnlineOrderOutput = OnlineOrderOutput;

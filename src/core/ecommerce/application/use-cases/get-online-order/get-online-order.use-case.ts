@@ -1,57 +1,32 @@
 import { IUseCase } from '../../../../shared/application/use-case.interface';
 import { NotFoundError } from '../../../../shared/domain/errors/not-found.error';
-import { OnlineOrder, OnlineOrderId, OrderStatus, DeliveryAddress } from '../../../domain/online-order.aggregate';
-import { IOnlineOrderRepository } from '../../../domain/online-order.repository';
-
-export type GetOnlineOrderInput = {
-  id: string;
-};
-
-export type GetOnlineOrderOutput = {
-  id: string;
-  client_id: string;
-  items: Array<{
-    product_id: string;
-    quantity: number;
-    unit_price: number;
-    subtotal: number;
-  }>;
-  total: number;
-  status: OrderStatus;
-  delivery_address: DeliveryAddress;
-  delivery_fee: number;
-  payment_method: string | undefined;
-  created_at: Date;
-  updated_at: Date;
-};
+import { EntityValidationError } from '../../../../shared/domain/validators/validation.error';
+import { OnlineOrder, OnlineOrderId } from '../../../domain/online-order.aggregate';
+import { OnlineOrderOutput, OnlineOrderOutputMapper } from '../common/online-order-output';
+import { IOnlineOrderRepository } from '../../../domain/repositories/online-order.repository.interface';
+import { GetOnlineOrderInput, ValidateGetOnlineOrderInput } from './get-online-order.input';
 
 export class GetOnlineOrderUseCase implements IUseCase<GetOnlineOrderInput, GetOnlineOrderOutput> {
-  constructor(private onlineOrderRepository: IOnlineOrderRepository) {}
+  constructor(private readonly onlineOrderRepo: IOnlineOrderRepository) {}
 
   async execute(input: GetOnlineOrderInput): Promise<GetOnlineOrderOutput> {
     const orderId = new OnlineOrderId(input.id);
-    const onlineOrder = await this.onlineOrderRepository.findById(orderId);
+    const onlineOrder = await this.onlineOrderRepo.findById(orderId);
 
     if (!onlineOrder) {
       throw new NotFoundError(input.id, OnlineOrder);
     }
 
-    return {
-      id: onlineOrder.order_id.id,
-      client_id: onlineOrder.client_id.id,
-      items: onlineOrder.items.map((item) => ({
-        product_id: item.product_id.id,
-        quantity: item.quantity.value,
-        unit_price: item.unit_price.value,
-        subtotal: item.subtotal.value,
-      })),
-      total: onlineOrder.total.value,
-      status: onlineOrder.status,
-      delivery_address: onlineOrder.delivery_address,
-      delivery_fee: onlineOrder.delivery_fee.value,
-      payment_method: onlineOrder.payment_method?.toString(),
-      created_at: onlineOrder.created_at,
-      updated_at: onlineOrder.updated_at,
-    };
+    if (onlineOrder.store_id !== input.store_id) {
+      throw new EntityValidationError([
+        {
+          store_id: ['Online order does not belong to this store'],
+        },
+      ]);
+    }
+
+    return OnlineOrderOutputMapper.toOutput(onlineOrder);
   }
 }
+
+export type GetOnlineOrderOutput = OnlineOrderOutput;
