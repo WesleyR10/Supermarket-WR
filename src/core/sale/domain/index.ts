@@ -1,6 +1,6 @@
 // Sale Domain Exports
 export * from './sale.aggregate';
-export * from './sale.repository.interface';
+export * from './repositories/sale.repository.interface';
 export * from './sale.validator';
 export * from './sale-fake.builder';
 
